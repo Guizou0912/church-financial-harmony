@@ -15,7 +15,7 @@ const App = () => (
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* Add more routes as they are developed */}
+          {/* Ajoutez plus de routes au fur et à mesure du développement */}
           <Route path="/finances" element={<NotFound />} />
           <Route path="/departments" element={<NotFound />} />
           <Route path="/events" element={<NotFound />} />

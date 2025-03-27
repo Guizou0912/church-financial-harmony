@@ -10,12 +10,12 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const menuItems = [
-    { title: 'Dashboard', icon: <Home className="w-4 h-4" />, href: '/' },
+    { title: 'Tableau de Bord', icon: <Home className="w-4 h-4" />, href: '/' },
     { title: 'Finances', icon: <DollarSign className="w-4 h-4" />, href: '/finances' },
-    { title: 'Departments', icon: <Users className="w-4 h-4" />, href: '/departments' },
-    { title: 'Events', icon: <Calendar className="w-4 h-4" />, href: '/events' },
-    { title: 'Reports', icon: <BarChart3 className="w-4 h-4" />, href: '/reports' },
-    { title: 'Settings', icon: <Settings className="w-4 h-4" />, href: '/settings' },
+    { title: 'Départements', icon: <Users className="w-4 h-4" />, href: '/departments' },
+    { title: 'Événements', icon: <Calendar className="w-4 h-4" />, href: '/events' },
+    { title: 'Rapports', icon: <BarChart3 className="w-4 h-4" />, href: '/reports' },
+    { title: 'Paramètres', icon: <Settings className="w-4 h-4" />, href: '/settings' },
   ];
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -42,7 +42,7 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop menu */}
+          {/* Menu pour ordinateur */}
           <div className="hidden md:block">
             <div className="flex items-center space-x-4">
               {menuItems.map((item) => (
@@ -69,12 +69,12 @@ const Navbar = () => {
               whileTap={{ scale: 0.95 }}
             >
               <Button className="bg-gradient-to-r from-church-cyan to-church-purple text-white">
-                Sign In
+                Se Connecter
               </Button>
             </motion.div>
           </div>
 
-          {/* Mobile menu button */}
+          {/* Bouton du menu mobile */}
           <div className="flex md:hidden">
             <button
               onClick={toggleMenu}
@@ -90,7 +90,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Menu mobile */}
       <div
         className={cn(
           "md:hidden transition-all duration-300 ease-in-out overflow-hidden",
@@ -111,7 +111,7 @@ const Navbar = () => {
           ))}
           <div className="pt-2">
             <Button className="w-full bg-gradient-to-r from-church-cyan to-church-purple text-white">
-              Sign In
+              Se Connecter
             </Button>
           </div>
         </div>

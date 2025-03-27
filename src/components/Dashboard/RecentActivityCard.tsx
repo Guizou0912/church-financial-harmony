@@ -35,7 +35,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ activities }) =
   
   return (
     <div className="glass-card p-5">
-      <h3 className="text-lg font-bold mb-4">Recent Activity</h3>
+      <h3 className="text-lg font-bold mb-4">Activité Récente</h3>
       <div className="space-y-4">
         {activities.map((activity) => (
           <motion.div
