@@ -5,7 +5,7 @@ import { DollarSign, Users, Calendar, TrendingUp, BarChart3, PieChart } from 'lu
 import PageLayout from '@/components/Layout/PageLayout';
 import StatCard from '@/components/Dashboard/StatCard';
 import ChartCard from '@/components/Dashboard/ChartCard';
-import RecentActivityCard from '@/components/Dashboard/RecentActivityCard';
+import RecentActivityCard, { Activity } from '@/components/Dashboard/RecentActivityCard';
 import BudgetProgressCard from '@/components/Dashboard/BudgetProgressCard';
 
 // Example data
@@ -35,7 +35,7 @@ const departmentData = [
   { name: 'Community', value: 22000 },
 ];
 
-const recentActivities = [
+const recentActivities: Activity[] = [
   {
     id: '1',
     title: 'New Donation Received',
