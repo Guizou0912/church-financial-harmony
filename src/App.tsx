@@ -5,6 +5,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
+import Finances from "./pages/Finances";
+import Departments from "./pages/Departments";
+import Events from "./pages/Events";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -15,12 +20,11 @@ const App = () => (
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* Ajoutez plus de routes au fur et à mesure du développement */}
-          <Route path="/finances" element={<NotFound />} />
-          <Route path="/departments" element={<NotFound />} />
-          <Route path="/events" element={<NotFound />} />
-          <Route path="/reports" element={<NotFound />} />
-          <Route path="/settings" element={<NotFound />} />
+          <Route path="/finances" element={<Finances />} />
+          <Route path="/departments" element={<Departments />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>
