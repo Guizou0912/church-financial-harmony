@@ -18,7 +18,8 @@ import {
   FileText,
   Mail,
   Smartphone,
-  Check
+  Check,
+  Download
 } from 'lucide-react';
 import PageLayout from '@/components/Layout/PageLayout';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
