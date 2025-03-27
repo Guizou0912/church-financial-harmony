@@ -13,9 +13,10 @@ interface BudgetItem {
 
 interface BudgetProgressCardProps {
   items: BudgetItem[];
+  onItemClick?: (id: string) => void;
 }
 
-const BudgetProgressCard: React.FC<BudgetProgressCardProps> = ({ items }) => {
+const BudgetProgressCard: React.FC<BudgetProgressCardProps> = ({ items, onItemClick }) => {
   // Fonction d'affichage de la monnaie MGA avec format
   const formatMGA = (value: number) => {
     return new Intl.NumberFormat('fr-MG', {
@@ -37,6 +38,8 @@ const BudgetProgressCard: React.FC<BudgetProgressCardProps> = ({ items }) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
+              className={onItemClick ? "cursor-pointer hover:bg-white/10 p-2 rounded-lg -mx-2" : ""}
+              onClick={() => onItemClick && onItemClick(item.id)}
             >
               <div className="flex justify-between items-center mb-1">
                 <span className="text-sm font-medium">{item.name}</span>

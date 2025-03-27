@@ -27,6 +27,7 @@ interface ChartCardProps {
   data: any[];
   className?: string;
   colors?: string[];
+  onClick?: () => void;
 }
 
 const defaultColors = [
@@ -44,6 +45,7 @@ const ChartCard: React.FC<ChartCardProps> = ({
   data,
   className,
   colors = defaultColors,
+  onClick,
 }) => {
   const renderChart = () => {
     switch (type) {
@@ -125,8 +127,10 @@ const ChartCard: React.FC<ChartCardProps> = ({
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
       className={cn(
         "glass-card p-5 relative overflow-hidden",
+        onClick ? "hover:bg-white/10" : "",
         className
       )}
+      onClick={onClick}
     >
       <div className="mb-4">
         <h3 className="text-lg font-bold">{title}</h3>

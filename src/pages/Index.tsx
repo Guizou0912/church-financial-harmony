@@ -2,6 +2,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { DollarSign, Users, Calendar, TrendingUp, BarChart3, PieChart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from "@/components/ui/use-toast";
 import PageLayout from '@/components/Layout/PageLayout';
 import StatCard from '@/components/Dashboard/StatCard';
 import ChartCard from '@/components/Dashboard/ChartCard';
@@ -98,6 +100,8 @@ const budgetItems = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -126,6 +130,83 @@ const Index = () => {
       currency: 'MGA',
       maximumFractionDigits: 0
     }).format(value);
+  };
+
+  const handleStatCardClick = (type: string) => {
+    switch(type) {
+      case 'donations':
+        navigate('/finances');
+        break;
+      case 'members':
+        navigate('/departments');
+        break;
+      case 'events':
+        navigate('/events');
+        break;
+      case 'budget':
+        navigate('/finances');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleQuickAccessClick = (action: string) => {
+    switch(action) {
+      case 'createReport':
+        navigate('/reports');
+        break;
+      case 'addDonation':
+        navigate('/finances');
+        toast({
+          title: "Accès à l'ajout de don",
+          description: "Vous pouvez maintenant ajouter un nouveau don",
+        });
+        break;
+      case 'planEvent':
+        navigate('/events');
+        toast({
+          title: "Accès à la planification d'événement",
+          description: "Vous pouvez maintenant planifier un événement",
+        });
+        break;
+      case 'analyzeDonations':
+        navigate('/reports');
+        toast({
+          title: "Accès à l'analyse des dons",
+          description: "Vous pouvez maintenant analyser les dons",
+        });
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleActivityClick = (activity: Activity) => {
+    switch(activity.type) {
+      case 'donation':
+        navigate('/finances');
+        break;
+      case 'expense':
+        navigate('/finances');
+        break;
+      case 'event':
+        navigate('/events');
+        break;
+      case 'task':
+        navigate('/departments');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleBudgetItemClick = (id: string) => {
+    navigate('/finances');
+    toast({
+      title: "Détails du budget",
+      description: `Consultation des détails du budget pour l'ID: ${id}`,
+    });
   };
 
   return (
@@ -163,28 +244,32 @@ const Index = () => {
               value={formatMGA(128540000)}
               icon={<DollarSign className="h-5 w-5" />}
               trend={12}
-              className="border-l-4 border-l-church-cyan"
+              className="border-l-4 border-l-church-cyan cursor-pointer"
+              onClick={() => handleStatCardClick('donations')}
             />
             <StatCard
               title="Membres Actifs"
               value="856"
               icon={<Users className="h-5 w-5" />}
               trend={5}
-              className="border-l-4 border-l-church-magenta"
+              className="border-l-4 border-l-church-magenta cursor-pointer"
+              onClick={() => handleStatCardClick('members')}
             />
             <StatCard
               title="Événements à Venir"
               value="12"
               icon={<Calendar className="h-5 w-5" />}
               trend={-2}
-              className="border-l-4 border-l-church-purple"
+              className="border-l-4 border-l-church-purple cursor-pointer"
+              onClick={() => handleStatCardClick('events')}
             />
             <StatCard
               title="Utilisation du Budget"
               value="76%"
               icon={<TrendingUp className="h-5 w-5" />}
               trend={8}
-              className="border-l-4 border-l-church-blue"
+              className="border-l-4 border-l-church-blue cursor-pointer"
+              onClick={() => handleStatCardClick('budget')}
             />
           </div>
         </motion.div>
@@ -196,12 +281,16 @@ const Index = () => {
             subtitle="Revenus mensuels pour l'année en cours"
             type="area"
             data={revenueData}
+            className="cursor-pointer"
+            onClick={() => navigate('/reports')}
           />
           <ChartCard
             title="Répartition des Dépenses"
             subtitle="Allocation des dépenses par catégorie"
             type="pie"
             data={expenseData}
+            className="cursor-pointer"
+            onClick={() => navigate('/reports')}
           />
         </motion.div>
 
@@ -212,13 +301,21 @@ const Index = () => {
             subtitle="Allocation budgétaire par département"
             type="bar"
             data={departmentData}
+            className="cursor-pointer"
+            onClick={() => navigate('/departments')}
           />
-          <BudgetProgressCard items={budgetItems} />
+          <BudgetProgressCard 
+            items={budgetItems} 
+            onItemClick={handleBudgetItemClick}
+          />
         </motion.div>
 
         {/* Activité récente */}
         <motion.div variants={itemVariants}>
-          <RecentActivityCard activities={recentActivities} />
+          <RecentActivityCard 
+            activities={recentActivities} 
+            onActivityClick={handleActivityClick}
+          />
         </motion.div>
 
         {/* Accès rapide */}
@@ -227,16 +324,17 @@ const Index = () => {
             <h3 className="text-lg font-bold mb-4">Accès Rapide</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { title: 'Créer un Rapport', icon: <BarChart3 className="h-5 w-5" />, color: 'from-church-cyan to-blue-500' },
-                { title: 'Ajouter un Don', icon: <DollarSign className="h-5 w-5" />, color: 'from-church-magenta to-purple-500' },
-                { title: 'Planifier un Événement', icon: <Calendar className="h-5 w-5" />, color: 'from-green-500 to-teal-500' },
-                { title: 'Analyser les Dons', icon: <PieChart className="h-5 w-5" />, color: 'from-yellow-500 to-red-500' },
-              ].map((item, index) => (
+                { id: 'createReport', title: 'Créer un Rapport', icon: <BarChart3 className="h-5 w-5" />, color: 'from-church-cyan to-blue-500' },
+                { id: 'addDonation', title: 'Ajouter un Don', icon: <DollarSign className="h-5 w-5" />, color: 'from-church-magenta to-purple-500' },
+                { id: 'planEvent', title: 'Planifier un Événement', icon: <Calendar className="h-5 w-5" />, color: 'from-green-500 to-teal-500' },
+                { id: 'analyzeDonations', title: 'Analyser les Dons', icon: <PieChart className="h-5 w-5" />, color: 'from-yellow-500 to-red-500' },
+              ].map((item) => (
                 <motion.button
-                  key={index}
+                  key={item.id}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex flex-col items-center justify-center p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  onClick={() => handleQuickAccessClick(item.id)}
                 >
                   <div className={`p-3 rounded-full mb-2 bg-gradient-to-r ${item.color}`}>
                     {item.icon}

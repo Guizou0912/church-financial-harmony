@@ -15,9 +15,10 @@ export interface Activity {
 
 interface RecentActivityCardProps {
   activities: Activity[];
+  onActivityClick?: (activity: Activity) => void;
 }
 
-const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ activities }) => {
+const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ activities, onActivityClick }) => {
   const getActivityIcon = (type: ActivityType) => {
     switch (type) {
       case 'donation':
@@ -43,7 +44,8 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({ activities }) =
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            className="flex items-start p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+            className={`flex items-start p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors ${onActivityClick ? "cursor-pointer" : ""}`}
+            onClick={() => onActivityClick && onActivityClick(activity)}
           >
             <div className="p-2 rounded-full bg-white/10 mr-3">
               {getActivityIcon(activity.type)}

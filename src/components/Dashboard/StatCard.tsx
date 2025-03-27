@@ -9,16 +9,19 @@ interface StatCardProps {
   icon: React.ReactNode;
   trend?: number;
   className?: string;
+  onClick?: () => void;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, className }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, className, onClick }) => {
   return (
     <motion.div
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
       className={cn(
         "glass-card p-5 relative overflow-hidden group",
+        onClick ? "hover:bg-white/10" : "",
         className
       )}
+      onClick={onClick}
     >
       <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-white/5 z-0" />
       <div className="relative z-10">
