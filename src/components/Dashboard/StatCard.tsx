@@ -15,35 +15,25 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, className, onClick }) => {
   return (
     <motion.div
-      whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
       className={cn(
         "glass-card p-5 relative overflow-hidden group",
-        onClick ? "hover:bg-white/10 cursor-pointer transition-all" : "",
+        onClick ? "hover:bg-white/10" : "",
         className
       )}
       onClick={onClick}
     >
-      <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-white/5 z-0 group-hover:bg-white/10 transition-colors" />
+      <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-white/5 z-0" />
       <div className="relative z-10">
         <div className="flex justify-between items-start mb-2">
           <p className="text-gray-400 text-sm font-medium">{title}</p>
-          <motion.div 
-            className="text-gray-300 p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors"
-            whileHover={{ rotate: 15 }}
-            transition={{ type: "spring", stiffness: 500 }}
-          >
+          <div className="text-gray-300 p-2 rounded-full bg-white/5">
             {icon}
-          </motion.div>
+          </div>
         </div>
-        <h3 className="text-2xl font-bold mb-1 group-hover:text-white transition-colors">{value}</h3>
+        <h3 className="text-2xl font-bold mb-1">{value}</h3>
         {trend !== undefined && (
-          <motion.div 
-            className="flex items-center"
-            initial={{ opacity: 0, x: -5 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <div className="flex items-center">
             <span
               className={`inline-block mr-1 ${
                 trend >= 0 ? "text-green-400" : "text-red-400"
@@ -58,7 +48,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, classNam
             >
               {Math.abs(trend)}% from last month
             </span>
-          </motion.div>
+          </div>
         )}
       </div>
       <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-church-cyan to-church-magenta transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
