@@ -74,7 +74,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
                   </span>
                 </td>
-                <td className="p-3 text-sm text-right font-medium" className={type === 'revenu' ? 'text-green-400' : 'text-red-400'}>
+                <td className={`p-3 text-sm text-right font-medium ${type === 'revenu' ? 'text-green-400' : 'text-red-400'}`}>
                   {formatMGA(tx.montant)}
                 </td>
               </motion.tr>
