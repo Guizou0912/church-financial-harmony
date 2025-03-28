@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/components/ui/use-toast";
 import { 
   PlusCircle, 
   Download, 
@@ -57,6 +57,60 @@ const Finances = () => {
     { id: 4, date: '02/07/2023', description: 'Rénovation salle', montant: 6500000, type: 'maintenance' },
   ];
 
+  // Nouvelles fonctions interactives
+  const handleStatCardClick = (type: string) => {
+    let message = "";
+    switch(type) {
+      case 'revenue':
+        message = "Analyse des revenus en cours...";
+        break;
+      case 'expenses':
+        message = "Détails des dépenses en cours de chargement...";
+        break;
+      case 'balance':
+        message = "Visualisation du solde actuel...";
+        break;
+      case 'growth':
+        message = "Analyse de la croissance annuelle...";
+        break;
+    }
+    toast({
+      title: "Information financière",
+      description: message,
+    });
+  };
+
+  const handleTransactionClick = (id: number, description: string) => {
+    toast({
+      title: "Détails de la transaction",
+      description: `Affichage des détails pour: ${description}`,
+    });
+  };
+
+  const handleButtonClick = (action: string) => {
+    switch(action) {
+      case 'add':
+        toast({
+          title: "Nouvelle transaction",
+          description: "Formulaire d'ajout de transaction ouvert",
+        });
+        break;
+      case 'export':
+        toast({
+          title: "Exportation",
+          description: "Préparation de l'exportation des données financières",
+        });
+        break;
+    }
+  };
+
+  const handleChartClick = (type: string) => {
+    toast({
+      title: "Analyse graphique",
+      description: `Affichage détaillé du graphique: ${type}`,
+    });
+  };
+
   return (
     <PageLayout>
       <motion.div
@@ -71,11 +125,18 @@ const Finances = () => {
             <p className="text-gray-400 mt-1">Suivez, analysez et gérez les finances de votre église</p>
           </div>
           <div className="flex space-x-2">
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 hover:bg-white/10"
+              onClick={() => handleButtonClick('export')}
+            >
               <Download size={16} />
               Exporter
             </Button>
-            <Button className="bg-gradient-to-r from-church-cyan to-church-purple">
+            <Button 
+              className="bg-gradient-to-r from-church-cyan to-church-purple hover:opacity-90 transition-opacity"
+              onClick={() => handleButtonClick('add')}
+            >
               <PlusCircle size={16} className="mr-1" />
               Nouvelle transaction
             </Button>
@@ -88,28 +149,32 @@ const Finances = () => {
             value={formatMGA(158640000)}
             icon={<DollarSign className="h-5 w-5" />}
             trend={8}
-            className="border-l-4 border-l-green-500"
+            className="border-l-4 border-l-green-500 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleStatCardClick('revenue')}
           />
           <StatCard
             title="Dépenses Totales"
             value={formatMGA(98450000)}
             icon={<ShoppingCart className="h-5 w-5" />}
             trend={5}
-            className="border-l-4 border-l-red-500"
+            className="border-l-4 border-l-red-500 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleStatCardClick('expenses')}
           />
           <StatCard
             title="Solde Actuel"
             value={formatMGA(60190000)}
             icon={<BarChart3 className="h-5 w-5" />}
             trend={12}
-            className="border-l-4 border-l-church-cyan"
+            className="border-l-4 border-l-church-cyan cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleStatCardClick('balance')}
           />
           <StatCard
             title="Croissance Annuelle"
             value="24%"
             icon={<TrendingUp className="h-5 w-5" />}
             trend={3}
-            className="border-l-4 border-l-church-purple"
+            className="border-l-4 border-l-church-purple cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleStatCardClick('growth')}
           />
         </div>
 
@@ -132,6 +197,8 @@ const Finances = () => {
                   subtitle="Revenus mensuels pour l'année en cours"
                   type="area"
                   data={revenueData}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleChartClick('Revenus mensuels')}
                 />
               </div>
               
@@ -159,7 +226,11 @@ const Finances = () => {
                   </thead>
                   <tbody>
                     {transactionsRevenues.map((tx) => (
-                      <tr key={tx.id} className="border-b border-white/5 hover:bg-white/5">
+                      <tr 
+                        key={tx.id} 
+                        className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition-colors"
+                        onClick={() => handleTransactionClick(tx.id, tx.description)}
+                      >
                         <td className="p-3 text-sm">{tx.date}</td>
                         <td className="p-3 text-sm">{tx.description}</td>
                         <td className="p-3 text-sm">
@@ -188,6 +259,8 @@ const Finances = () => {
                   subtitle="Dépenses mensuelles pour l'année en cours"
                   type="area"
                   data={depenseData}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleChartClick('Dépenses mensuelles')}
                 />
               </div>
               
@@ -215,7 +288,11 @@ const Finances = () => {
                   </thead>
                   <tbody>
                     {transactionsDepenses.map((tx) => (
-                      <tr key={tx.id} className="border-b border-white/5 hover:bg-white/5">
+                      <tr 
+                        key={tx.id} 
+                        className="border-b border-white/5 hover:bg-white/10 cursor-pointer transition-colors"
+                        onClick={() => handleTransactionClick(tx.id, tx.description)}
+                      >
                         <td className="p-3 text-sm">{tx.date}</td>
                         <td className="p-3 text-sm">{tx.description}</td>
                         <td className="p-3 text-sm">
