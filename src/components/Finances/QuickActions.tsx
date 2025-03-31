@@ -227,7 +227,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onActionClick }) => {
                 </SheetHeader>
                 
                 <div className="mt-6">
-                  <BudgetPlanner onSave={handleSaveBudget} />
+                  <BudgetPlanner onSaveBudget={handleSaveBudget} />
                 </div>
                 
                 <SheetFooter className="mt-6">
