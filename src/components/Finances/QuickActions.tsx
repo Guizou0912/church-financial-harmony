@@ -60,6 +60,20 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onActionClick }) => {
     });
   };
 
+  const handleGenerateReport = (options: any) => {
+    toast({
+      title: "Rapport généré",
+      description: `Le rapport "${options.title}" a été généré au format ${options.format.toUpperCase()}.`
+    });
+  };
+
+  const handleSaveBudget = (items: any[]) => {
+    toast({
+      title: "Budget mis à jour",
+      description: `Le budget a été mis à jour avec succès avec ${items.length} éléments.`
+    });
+  };
+
   const pendingPayments = [
     { id: "PAY-2023-07-15", description: "Facture d'électricité", amount: 980000, date: "15/07/2023" },
     { id: "PAY-2023-07-14", description: "Salaires du personnel", amount: 8000000, date: "14/07/2023" },
@@ -159,26 +173,70 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onActionClick }) => {
             </Sheet>
 
             {/* Financial Reports */}
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white/5 hover:bg-white/10 p-4 rounded-lg text-center cursor-pointer transition-colors"
-              onClick={() => onActionClick('report')}
-            >
-              <FileBarChart className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-              <h3 className="font-medium text-base">Rapports</h3>
-            </motion.div>
+            <Sheet>
+              <SheetTrigger asChild>
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-white/5 hover:bg-white/10 p-4 rounded-lg text-center cursor-pointer transition-colors"
+                  onClick={() => onActionClick('report')}
+                >
+                  <FileBarChart className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                  <h3 className="font-medium text-base">Rapports</h3>
+                </motion.div>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="text-xl">Générer un rapport financier</SheetTitle>
+                  <SheetDescription>
+                    Créez des rapports financiers personnalisés
+                  </SheetDescription>
+                </SheetHeader>
+                
+                <div className="mt-6">
+                  <FinancialReportGenerator onGenerateReport={handleGenerateReport} />
+                </div>
+                
+                <SheetFooter className="mt-6">
+                  <SheetClose asChild>
+                    <Button className="w-full text-base">Fermer</Button>
+                  </SheetClose>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
 
             {/* Budget Planning */}
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white/5 hover:bg-white/10 p-4 rounded-lg text-center cursor-pointer transition-colors"
-              onClick={() => onActionClick('budget')}
-            >
-              <Calculator className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-              <h3 className="font-medium text-base">Budget</h3>
-            </motion.div>
+            <Sheet>
+              <SheetTrigger asChild>
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-white/5 hover:bg-white/10 p-4 rounded-lg text-center cursor-pointer transition-colors"
+                  onClick={() => onActionClick('budget')}
+                >
+                  <Calculator className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                  <h3 className="font-medium text-base">Budget</h3>
+                </motion.div>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="text-xl">Planification budgétaire</SheetTitle>
+                  <SheetDescription>
+                    Créez et gérez vos budgets pour l'année
+                  </SheetDescription>
+                </SheetHeader>
+                
+                <div className="mt-6">
+                  <BudgetPlanner onSave={handleSaveBudget} />
+                </div>
+                
+                <SheetFooter className="mt-6">
+                  <SheetClose asChild>
+                    <Button className="w-full text-base">Fermer</Button>
+                  </SheetClose>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
 
             {/* Alerts Configuration */}
             <Sheet>
