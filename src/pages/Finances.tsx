@@ -5,12 +5,14 @@ import { useToast } from "@/hooks/use-toast";
 import PageLayout from '@/components/Layout/PageLayout';
 import BudgetProgressCard from '@/components/Dashboard/BudgetProgressCard';
 
-// Import our new components
+// Import our enhanced components
 import FinanceHeader from '@/components/Finances/FinanceHeader';
 import FinanceStats from '@/components/Finances/FinanceStats';
 import FinanceCharts from '@/components/Finances/FinanceCharts';
 import TransactionTabs from '@/components/Finances/TransactionTabs';
 import QuickActions from '@/components/Finances/QuickActions';
+import { TransactionFilters } from '@/components/Finances/TransactionFilter'; 
+import { ReportOptions } from '@/components/Finances/FinancialReportGenerator';
 
 // Import financial data
 import {
@@ -140,6 +142,30 @@ const Finances = () => {
     }
   };
 
+  const handleApplyFilter = (filters: TransactionFilters) => {
+    toast({
+      title: "Filtres appliqués",
+      description: "Les transactions ont été filtrées selon vos critères.",
+    });
+    // In a real implementation, we would filter the transaction data here
+  };
+
+  const handleGenerateReport = (options: ReportOptions) => {
+    toast({
+      title: "Rapport généré",
+      description: `Le rapport "${options.title}" a été généré au format ${options.format.toUpperCase()}.`,
+    });
+    // In a real implementation, we would generate the report here
+  };
+
+  const handleSaveBudget = (items: any[]) => {
+    toast({
+      title: "Budget mis à jour",
+      description: "Les modifications du budget ont été enregistrées avec succès.",
+    });
+    // In a real implementation, we would update the budget data here
+  };
+
   return (
     <PageLayout>
       <motion.div
@@ -152,6 +178,8 @@ const Finances = () => {
           onFilterClick={handleFilterClick}
           onExportClick={handleExport}
           onAddTransactionClick={handleAddTransaction}
+          onApplyFilter={handleApplyFilter}
+          onGenerateReport={handleGenerateReport}
         />
 
         <FinanceStats onStatCardClick={handleStatCardClick} />
