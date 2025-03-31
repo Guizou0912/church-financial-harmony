@@ -21,13 +21,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 interface TransactionFilterProps {
   onApplyFilter: (filters: TransactionFilters) => void;
 }
 
 export interface TransactionFilters {
-  dateRange: { from: Date | undefined; to: Date | undefined };
+  dateRange: DateRange | undefined;
   minAmount: number | null;
   maxAmount: number | null;
   type: string | null;
@@ -36,30 +37,25 @@ export interface TransactionFilters {
 
 const TransactionFilter: React.FC<TransactionFilterProps> = ({ onApplyFilter }) => {
   const [filters, setFilters] = useState<TransactionFilters>({
-    dateRange: { from: undefined, to: undefined },
+    dateRange: undefined,
     minAmount: null,
     maxAmount: null,
     type: null,
     categories: []
   });
 
-  const [date, setDate] = React.useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: undefined,
-    to: undefined,
-  });
+  // Using proper DateRange type from react-day-picker
+  const [date, setDate] = useState<DateRange | undefined>(undefined);
 
   const handleReset = () => {
     setFilters({
-      dateRange: { from: undefined, to: undefined },
+      dateRange: undefined,
       minAmount: null,
       maxAmount: null,
       type: null,
       categories: []
     });
-    setDate({ from: undefined, to: undefined });
+    setDate(undefined);
   };
 
   const handleApply = () => {
@@ -127,7 +123,7 @@ const TransactionFilter: React.FC<TransactionFilterProps> = ({ onApplyFilter }) 
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date.from ? (
+                  {date?.from ? (
                     date.to ? (
                       <>
                         {format(date.from, "dd/MM/yyyy")} - {format(date.to, "dd/MM/yyyy")}
@@ -144,10 +140,11 @@ const TransactionFilter: React.FC<TransactionFilterProps> = ({ onApplyFilter }) 
                 <Calendar
                   initialFocus
                   mode="range"
-                  defaultMonth={date.from}
+                  defaultMonth={date?.from}
                   selected={date}
                   onSelect={setDate}
                   numberOfMonths={2}
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
