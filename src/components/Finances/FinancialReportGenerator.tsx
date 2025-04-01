@@ -14,6 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { generateFinancialReportPDF } from '@/utils/pdfGenerator';
+import { 
+  revenueData, 
+  depenseData, 
+  transactionsRevenues, 
+  transactionsDepenses 
+} from '@/services/financeData';
 
 interface FinancialReportGeneratorProps {
   onGenerateReport: (options: ReportOptions) => void;
@@ -43,6 +50,7 @@ const FinancialReportGenerator: React.FC<FinancialReportGeneratorProps> = ({ onG
     includeRevenues: true,
     includeSummary: true,
   });
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -60,12 +68,72 @@ const FinancialReportGenerator: React.FC<FinancialReportGeneratorProps> = ({ onG
     }));
   };
 
-  const handleGenerateReport = () => {
+  const getPeriodText = (period: string): string => {
+    switch (period) {
+      case 'month': return 'Mois courant';
+      case 'quarter': return 'Trimestre courant';
+      case 'year': return 'Année courante';
+      case 'custom': return 'Période personnalisée';
+      default: return period;
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    setIsGenerating(true);
+    
+    try {
+      // Generate transactions data
+      const transactions = [
+        ...options.includeRevenues ? transactionsRevenues : [],
+        ...options.includeExpenses ? transactionsDepenses : []
+      ];
+
+      // Create the PDF document
+      const doc = generateFinancialReportPDF({
+        title: options.title,
+        period: getPeriodText(options.period),
+        includeRevenues: options.includeRevenues,
+        includeExpenses: options.includeExpenses,
+        includeSummary: options.includeSummary,
+        includeTransactions: options.includeTransactions,
+        revenueData: revenueData,
+        expenseData: depenseData,
+        transactionData: transactions
+      });
+      
+      // Save the PDF
+      doc.save(`${options.title.replace(/\s+/g, '_')}.pdf`);
+      
+      toast({
+        title: "PDF généré avec succès",
+        description: `Le rapport "${options.title}" a été téléchargé au format PDF.`
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Erreur de génération",
+        description: "Une erreur s'est produite lors de la génération du PDF.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+    
+    // Still call the parent function for any additional logic
     onGenerateReport(options);
-    toast({
-      title: "Génération du rapport",
-      description: `Le rapport "${options.title}" est en cours de génération.`
-    });
+  };
+
+  const handleGenerateReport = () => {
+    if (options.format === 'pdf') {
+      handleDownloadPDF();
+    } else {
+      // For other format types
+      onGenerateReport(options);
+      toast({
+        title: "Génération du rapport",
+        description: `Le rapport "${options.title}" est en cours de génération au format ${options.format.toUpperCase()}.`
+      });
+    }
   };
 
   const handlePrintPreview = () => {
@@ -215,10 +283,11 @@ const FinancialReportGenerator: React.FC<FinancialReportGeneratorProps> = ({ onG
             <Button
               type="button"
               onClick={handleGenerateReport}
+              disabled={isGenerating}
               className="w-full text-base"
             >
               <Download className="mr-2 h-4 w-4" />
-              Générer
+              {isGenerating ? 'Génération...' : 'Générer'}
             </Button>
           </div>
         </SheetFooter>

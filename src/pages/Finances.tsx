@@ -13,6 +13,7 @@ import TransactionTabs from '@/components/Finances/TransactionTabs';
 import QuickActions from '@/components/Finances/QuickActions';
 import { TransactionFilters } from '@/components/Finances/TransactionFilter'; 
 import { ReportOptions } from '@/components/Finances/FinancialReportGenerator';
+import { generateFinancialReportPDF } from '@/utils/pdfGenerator';
 
 // Import financial data
 import {
@@ -155,7 +156,50 @@ const Finances = () => {
       title: "Rapport généré",
       description: `Le rapport "${options.title}" a été généré au format ${options.format.toUpperCase()}.`,
     });
-    // In a real implementation, we would generate the report here
+
+    if (options.format === 'pdf') {
+      try {
+        // Create combined transactions data
+        const transactions = [
+          ...options.includeRevenues ? transactionsRevenues : [],
+          ...options.includeExpenses ? transactionsDepenses : []
+        ];
+
+        // Get period text
+        const getPeriodText = (period: string): string => {
+          switch (period) {
+            case 'month': return 'Mois courant';
+            case 'quarter': return 'Trimestre courant';
+            case 'year': return 'Année courante';
+            case 'custom': return 'Période personnalisée';
+            default: return period;
+          }
+        };
+
+        // Generate and download PDF
+        const doc = generateFinancialReportPDF({
+          title: options.title,
+          period: getPeriodText(options.period),
+          includeRevenues: options.includeRevenues,
+          includeExpenses: options.includeExpenses,
+          includeSummary: options.includeSummary,
+          includeTransactions: options.includeTransactions,
+          revenueData: revenueData,
+          expenseData: depenseData,
+          transactionData: transactions
+        });
+        
+        doc.save(`${options.title.replace(/\s+/g, '_')}.pdf`);
+      } catch (error) {
+        console.error('Error generating PDF from Finances page:', error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur s'est produite lors de la génération du PDF.",
+          variant: "destructive"
+        });
+      }
+    }
+    // In a real implementation, we would generate the report here for other formats
   };
 
   const handleSaveBudget = (items: any[]) => {
