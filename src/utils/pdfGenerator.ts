@@ -145,7 +145,8 @@ export const generateFinancialReportPDF = (options: {
   }
   
   // Add footer
-  const pageCount = doc.internal.getNumberOfPages();
+  // In jsPDF v3, we need to get the page count differently
+  const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
