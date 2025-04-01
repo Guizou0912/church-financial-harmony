@@ -68,7 +68,7 @@ const FinanceHeader: React.FC<FinanceHeaderProps> = ({
   const handleTransactionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation pour les départements
+    // Validation seulement pour le département source
     if (transactionType === 'depense' && !transactionData.fromDepartment) {
       toast({
         title: "Département manquant",
@@ -78,14 +78,7 @@ const FinanceHeader: React.FC<FinanceHeaderProps> = ({
       return;
     }
     
-    if (transactionType === 'depense' && !transactionData.toDepartment) {
-      toast({
-        title: "Département manquant",
-        description: "Veuillez sélectionner le département qui reçoit la dépense.",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Le département bénéficiaire n'est plus obligatoire
     
     toast({
       title: "Transaction ajoutée",
@@ -227,13 +220,13 @@ const FinanceHeader: React.FC<FinanceHeaderProps> = ({
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-base font-medium">Département bénéficiaire</label>
+                    <label className="text-base font-medium">Département bénéficiaire <span className="text-gray-400 text-sm">(optionnel)</span></label>
                     <Select
                       value={transactionData.toDepartment}
                       onValueChange={(value) => handleSelectChange('toDepartment', value)}
                     >
                       <SelectTrigger className="w-full text-base">
-                        <SelectValue placeholder="Sélectionner le département qui reçoit" />
+                        <SelectValue placeholder="Sélectionner le département qui reçoit (optionnel)" />
                       </SelectTrigger>
                       <SelectContent>
                         {departments.map(dept => (
