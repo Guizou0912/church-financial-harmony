@@ -165,6 +165,14 @@ const Finances = () => {
     });
     // In a real implementation, we would update the budget data here
   };
+  
+  const handleSaveAlerts = (alerts: any[]) => {
+    toast({
+      title: "Alertes mises à jour",
+      description: "Les configurations d'alertes ont été enregistrées avec succès.",
+    });
+    // In a real implementation, we would save the alerts configuration here
+  };
 
   return (
     <PageLayout>

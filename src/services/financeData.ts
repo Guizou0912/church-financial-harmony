@@ -78,8 +78,40 @@ export const transactionsRevenues = [
 ];
 
 export const transactionsDepenses = [
-  { id: 1, date: '14/07/2023', description: 'Facture électricité', montant: 980000, type: 'utilitaire' },
-  { id: 2, date: '12/07/2023', description: 'Matériel technique', montant: 3500000, type: 'equipement' },
-  { id: 3, date: '08/07/2023', description: 'Salaires personnel', montant: 8000000, type: 'salaire' },
-  { id: 4, date: '02/07/2023', description: 'Rénovation salle', montant: 6500000, type: 'maintenance' },
+  { 
+    id: 1, 
+    date: '14/07/2023', 
+    description: 'Facture électricité', 
+    montant: 980000, 
+    type: 'utilitaire',
+    fromDepartment: '4', // Administration
+    toDepartment: '5', // Maintenance Bâtiment
+  },
+  { 
+    id: 2, 
+    date: '12/07/2023', 
+    description: 'Matériel technique', 
+    montant: 3500000, 
+    type: 'equipement',
+    fromDepartment: '4', // Administration
+    toDepartment: '6', // Médias et Communication
+  },
+  { 
+    id: 3, 
+    date: '08/07/2023', 
+    description: 'Salaires personnel', 
+    montant: 8000000, 
+    type: 'salaire',
+    fromDepartment: '4', // Administration
+    toDepartment: '1', // Ministère du Culte
+  },
+  { 
+    id: 4, 
+    date: '02/07/2023', 
+    description: 'Rénovation salle', 
+    montant: 6500000, 
+    type: 'maintenance',
+    fromDepartment: '4', // Administration
+    toDepartment: '5', // Maintenance Bâtiment
+  },
 ];

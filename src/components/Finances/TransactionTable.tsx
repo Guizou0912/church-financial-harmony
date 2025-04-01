@@ -18,6 +18,8 @@ interface Transaction {
   description: string;
   montant: number;
   type: string;
+  fromDepartment?: string;
+  toDepartment?: string;
 }
 
 interface TransactionTableProps {
@@ -25,6 +27,16 @@ interface TransactionTableProps {
   onTransactionClick: (transaction: Transaction, type: 'revenu' | 'depense') => void;
   type: 'revenu' | 'depense';
 }
+
+// Liste des départements pour l'affichage
+const departments = {
+  '1': 'Ministère du Culte',
+  '2': 'Programmes Jeunesse',
+  '3': 'Missions & Sensibilisation',
+  '4': 'Administration',
+  '5': 'Maintenance Bâtiment',
+  '6': 'Médias et Communication'
+};
 
 const TransactionTable: React.FC<TransactionTableProps> = ({ 
   transactions, 
@@ -70,6 +82,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       alert(`Transaction ${selectedTransaction.id} rejetée!`);
       setIsDetailsOpen(false);
     }
+  };
+
+  const getDepartmentName = (id?: string) => {
+    if (!id) return 'N/A';
+    return departments[id as keyof typeof departments] || 'Autre département';
   };
 
   const filteredTransactions = transactions.filter(tx => 
@@ -129,6 +146,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 </div>
               </th>
               <th className="p-3 text-sm font-semibold">Type</th>
+              {type === 'depense' && (
+                <th className="p-3 text-sm font-semibold">Départements</th>
+              )}
               <th className="p-3 text-sm font-semibold text-right cursor-pointer" onClick={() => handleSort('montant')}>
                 <div className="flex items-center justify-end">
                   Montant
@@ -166,6 +186,18 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
                   </span>
                 </td>
+                {type === 'depense' && (
+                  <td className="p-3 text-sm">
+                    {tx.fromDepartment || tx.toDepartment ? (
+                      <div className="text-xs">
+                        <span className="block text-gray-400">De: {getDepartmentName(tx.fromDepartment)}</span>
+                        <span className="block">À: {getDepartmentName(tx.toDepartment)}</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">Non spécifié</span>
+                    )}
+                  </td>
+                )}
                 <td className={`p-3 text-sm text-right font-medium ${type === 'revenu' ? 'text-green-400' : 'text-red-400'}`}>
                   {formatMGA(tx.montant)}
                 </td>
@@ -214,6 +246,19 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   <p className="text-yellow-400">En attente</p>
                 </div>
               </div>
+              
+              {type === 'depense' && (
+                <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-400">Département source</p>
+                    <p>{getDepartmentName(selectedTransaction.fromDepartment)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-400">Département bénéficiaire</p>
+                    <p>{getDepartmentName(selectedTransaction.toDepartment)}</p>
+                  </div>
+                </div>
+              )}
               
               <div className="flex justify-end space-x-2 pt-4">
                 {type === 'depense' && (

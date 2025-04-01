@@ -15,6 +15,13 @@ import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import TransactionFilter, { TransactionFilters } from './TransactionFilter';
 import FinancialReportGenerator, { ReportOptions } from './FinancialReportGenerator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FinanceHeaderProps {
   onFilterClick: () => void;
@@ -23,6 +30,16 @@ interface FinanceHeaderProps {
   onApplyFilter?: (filters: TransactionFilters) => void;
   onGenerateReport?: (options: ReportOptions) => void;
 }
+
+// Liste des départements pour la sélection
+const departments = [
+  { id: '1', name: 'Ministère du Culte' },
+  { id: '2', name: 'Programmes Jeunesse' },
+  { id: '3', name: 'Missions & Sensibilisation' },
+  { id: '4', name: 'Administration' },
+  { id: '5', name: 'Maintenance Bâtiment' },
+  { id: '6', name: 'Médias et Communication' },
+];
 
 const FinanceHeader: React.FC<FinanceHeaderProps> = ({ 
   onFilterClick, 
@@ -38,7 +55,9 @@ const FinanceHeader: React.FC<FinanceHeaderProps> = ({
     date: '',
     description: '',
     montant: '',
-    type: 'don'
+    type: 'don',
+    fromDepartment: '',
+    toDepartment: ''
   });
 
   const handleAddTransactionOpen = () => {
@@ -48,6 +67,26 @@ const FinanceHeader: React.FC<FinanceHeaderProps> = ({
 
   const handleTransactionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation pour les départements
+    if (transactionType === 'depense' && !transactionData.fromDepartment) {
+      toast({
+        title: "Département manquant",
+        description: "Veuillez sélectionner le département qui effectue la dépense.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (transactionType === 'depense' && !transactionData.toDepartment) {
+      toast({
+        title: "Département manquant",
+        description: "Veuillez sélectionner le département qui reçoit la dépense.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     toast({
       title: "Transaction ajoutée",
       description: `La transaction "${transactionData.description}" a été ajoutée avec succès.`
@@ -57,12 +96,18 @@ const FinanceHeader: React.FC<FinanceHeaderProps> = ({
       date: '',
       description: '',
       montant: '',
-      type: 'don'
+      type: 'don',
+      fromDepartment: '',
+      toDepartment: ''
     });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    setTransactionData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setTransactionData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -160,32 +205,76 @@ const FinanceHeader: React.FC<FinanceHeaderProps> = ({
                 />
               </div>
               
+              {transactionType === 'depense' && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-base font-medium">Département source</label>
+                    <Select
+                      value={transactionData.fromDepartment}
+                      onValueChange={(value) => handleSelectChange('fromDepartment', value)}
+                    >
+                      <SelectTrigger className="w-full text-base">
+                        <SelectValue placeholder="Sélectionner le département qui paie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map(dept => (
+                          <SelectItem key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-base font-medium">Département bénéficiaire</label>
+                    <Select
+                      value={transactionData.toDepartment}
+                      onValueChange={(value) => handleSelectChange('toDepartment', value)}
+                    >
+                      <SelectTrigger className="w-full text-base">
+                        <SelectValue placeholder="Sélectionner le département qui reçoit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map(dept => (
+                          <SelectItem key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+              
               <div className="space-y-2">
                 <label className="text-base font-medium">Type</label>
-                <select
-                  name="type"
+                <Select
                   value={transactionData.type}
-                  onChange={handleInputChange}
-                  className="w-full p-3 rounded-md border bg-white/5 text-base"
-                  required
+                  onValueChange={(value) => handleSelectChange('type', value)}
                 >
-                  {transactionType === 'revenu' ? (
-                    <>
-                      <option value="don">Don</option>
-                      <option value="dime">Dîme</option>
-                      <option value="contribution">Contribution</option>
-                      <option value="autre">Autre revenu</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="utilitaire">Utilitaire</option>
-                      <option value="equipement">Équipement</option>
-                      <option value="salaire">Salaire</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="autre">Autre dépense</option>
-                    </>
-                  )}
-                </select>
+                  <SelectTrigger className="w-full text-base">
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {transactionType === 'revenu' ? (
+                      <>
+                        <SelectItem value="don">Don</SelectItem>
+                        <SelectItem value="dime">Dîme</SelectItem>
+                        <SelectItem value="contribution">Contribution</SelectItem>
+                        <SelectItem value="autre">Autre revenu</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="utilitaire">Utilitaire</SelectItem>
+                        <SelectItem value="equipement">Équipement</SelectItem>
+                        <SelectItem value="salaire">Salaire</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="autre">Autre dépense</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             

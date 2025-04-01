@@ -8,7 +8,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-  SheetTrigger,
   SheetClose
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { formatMGA } from '@/lib/utils';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface BudgetItem {
   id: string;
@@ -216,16 +222,19 @@ const BudgetPlanner: React.FC<BudgetPlannerProps> = ({ onSaveBudget, existingBud
           </div>
           <div>
             <Label htmlFor="new-item-category">Catégorie</Label>
-            <select
-              id="new-item-category"
+            <Select
               value={newItem.category}
-              onChange={(e) => setNewItem({...newItem, category: e.target.value})}
-              className="w-full p-3 rounded-md border bg-white/5 text-base"
+              onValueChange={(value) => setNewItem({...newItem, category: value})}
             >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
+              <SelectTrigger id="new-item-category" className="text-base">
+                <SelectValue placeholder="Sélectionner une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button 
             type="button" 
