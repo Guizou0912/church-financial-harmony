@@ -9,88 +9,45 @@ import {
   Calendar, 
   Activity, 
   DollarSign,
-  ChevronRight
+  ChevronRight,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import PageLayout from '@/components/Layout/PageLayout';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import ChartCard from '@/components/Dashboard/ChartCard';
 import { formatMGA } from '@/lib/utils';
+import { useDepartmentsHandlers } from '@/hooks/useDepartmentsHandlers';
+import DepartmentModal from '@/components/Departments/DepartmentModal';
+import DepartmentDetails from '@/components/Departments/DepartmentDetails';
 
 const Departments = () => {
-  // Données exemple pour les départements
-  const departments = [
-    { 
-      id: 1, 
-      name: 'Ministère du Culte', 
-      leader: 'Sophie Rakoto', 
-      leaderAvatar: null,
-      memberCount: 24, 
-      nextMeeting: '18 Juillet 2023', 
-      budget: 30000000,
-      status: 'active' 
-    },
-    { 
-      id: 2, 
-      name: 'Jeunesse', 
-      leader: 'Jean Ravalison', 
-      leaderAvatar: null,
-      memberCount: 38, 
-      nextMeeting: '20 Juillet 2023', 
-      budget: 25000000,
-      status: 'active' 
-    },
-    { 
-      id: 3, 
-      name: 'Missions & Évangélisation', 
-      leader: 'François Andriamasy', 
-      leaderAvatar: null,
-      memberCount: 16, 
-      nextMeeting: '25 Juillet 2023', 
-      budget: 32000000,
-      status: 'active' 
-    },
-    { 
-      id: 4, 
-      name: 'Administration', 
-      leader: 'Natacha Rasolofo', 
-      leaderAvatar: null,
-      memberCount: 12, 
-      nextMeeting: '19 Juillet 2023', 
-      budget: 18000000,
-      status: 'active' 
-    },
-    { 
-      id: 5, 
-      name: 'Ministère des Femmes', 
-      leader: 'Marie Razafindrakoto', 
-      leaderAvatar: null,
-      memberCount: 45, 
-      nextMeeting: '22 Juillet 2023', 
-      budget: 22000000,
-      status: 'active' 
-    },
-    { 
-      id: 6, 
-      name: 'Média & Communication', 
-      leader: 'Paul Ranaivo', 
-      leaderAvatar: null,
-      memberCount: 8, 
-      nextMeeting: '21 Juillet 2023', 
-      budget: 15000000,
-      status: 'inactive' 
-    }
-  ];
+  const {
+    departments,
+    searchQuery,
+    selectedDepartment,
+    showAddDepartmentModal,
+    departmentPerformanceData,
+    handleSearchChange,
+    handleAddDepartment,
+    handleCloseModal,
+    handleSaveDepartment,
+    handleDepartmentClick,
+    handleToggleStatus
+  } = useDepartmentsHandlers();
 
-  // Données pour le graphique de performance des départements
-  const departmentPerformanceData = [
-    { name: 'Culte', value: 30000000 },
-    { name: 'Jeunesse', value: 25000000 },
-    { name: 'Missions', value: 32000000 },
-    { name: 'Admin', value: 18000000 },
-    { name: 'Femmes', value: 22000000 },
-    { name: 'Média', value: 15000000 },
-  ];
+  // If a department is selected, show its details
+  if (selectedDepartment) {
+    return (
+      <PageLayout>
+        <DepartmentDetails 
+          department={selectedDepartment} 
+          onBack={() => handleDepartmentClick(null)}
+        />
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
@@ -112,9 +69,14 @@ const Departments = () => {
                 type="text"
                 placeholder="Rechercher un département..."
                 className="pl-8 pr-4 py-2 bg-white/5 border border-white/10 rounded-md text-sm w-64 focus:outline-none focus:ring-2 focus:ring-church-cyan"
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
             </div>
-            <Button className="bg-gradient-to-r from-church-cyan to-church-purple">
+            <Button 
+              className="bg-gradient-to-r from-church-cyan to-church-purple"
+              onClick={handleAddDepartment}
+            >
               <PlusCircle size={16} className="mr-1" />
               Nouveau département
             </Button>
@@ -138,7 +100,8 @@ const Departments = () => {
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  onClick={() => handleDepartmentClick(dept)}
                 >
                   <div className="flex items-center">
                     <div className={`w-2 h-10 rounded-full ${dept.status === 'active' ? 'bg-green-500' : 'bg-gray-500'} mr-3`}></div>
@@ -180,7 +143,14 @@ const Departments = () => {
               <tbody>
                 {departments.map((dept) => (
                   <tr key={dept.id} className="border-b border-white/5 hover:bg-white/5">
-                    <td className="p-3 font-medium">{dept.name}</td>
+                    <td className="p-3 font-medium">
+                      <button 
+                        className="hover:text-church-cyan transition-colors"
+                        onClick={() => handleDepartmentClick(dept)}
+                      >
+                        {dept.name}
+                      </button>
+                    </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
@@ -212,9 +182,27 @@ const Departments = () => {
                       </Badge>
                     </td>
                     <td className="p-3">
-                      <Button variant="ghost" size="sm" className="rounded-full">
-                        <ChevronRight size={16} />
-                      </Button>
+                      <div className="flex space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="rounded-full h-7 w-7" 
+                          onClick={() => handleDepartmentClick(dept)}
+                        >
+                          <ChevronRight size={16} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="rounded-full h-7 w-7 text-gray-400 hover:text-white"
+                          onClick={() => handleToggleStatus(dept.id)}
+                        >
+                          {dept.status === 'active' 
+                            ? <ToggleRight size={16} className="text-green-400" /> 
+                            : <ToggleLeft size={16} />
+                          }
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -223,6 +211,12 @@ const Departments = () => {
           </div>
         </div>
       </motion.div>
+
+      <DepartmentModal 
+        open={showAddDepartmentModal}
+        onClose={handleCloseModal}
+        onSave={handleSaveDepartment}
+      />
     </PageLayout>
   );
 };
