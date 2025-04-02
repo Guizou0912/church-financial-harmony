@@ -2,15 +2,24 @@
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
+export interface Transaction {
+  id: number;
+  description: string;
+  amount: number;
+  date: string;
+  type: 'income' | 'expense';
+}
+
 export interface Department {
   id: number;
   name: string;
   leader: string;
   leaderAvatar: string | null;
   memberCount: number;
-  nextMeeting: string;
   budget: number;
   status: 'active' | 'inactive';
+  transactions: Transaction[];
+  balance: number;
 }
 
 export const useDepartmentsHandlers = () => {
@@ -18,6 +27,7 @@ export const useDepartmentsHandlers = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [showAddDepartmentModal, setShowAddDepartmentModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([
     { 
       id: 1, 
@@ -25,9 +35,13 @@ export const useDepartmentsHandlers = () => {
       leader: 'Sophie Rakoto', 
       leaderAvatar: null,
       memberCount: 24, 
-      nextMeeting: '18 Juillet 2023', 
       budget: 30000000,
-      status: 'active' 
+      status: 'active',
+      transactions: [
+        { id: 1, description: 'Don pour bibles', amount: 2000000, date: '2023-06-15', type: 'income' },
+        { id: 2, description: 'Achat matériel audio', amount: 1500000, date: '2023-06-30', type: 'expense' }
+      ],
+      balance: 500000
     },
     { 
       id: 2, 
@@ -35,9 +49,13 @@ export const useDepartmentsHandlers = () => {
       leader: 'Jean Ravalison', 
       leaderAvatar: null,
       memberCount: 38, 
-      nextMeeting: '20 Juillet 2023', 
       budget: 25000000,
-      status: 'active' 
+      status: 'active',
+      transactions: [
+        { id: 3, description: 'Contribution camp jeunesse', amount: 3000000, date: '2023-07-05', type: 'income' },
+        { id: 4, description: 'Matériel sportif', amount: 1200000, date: '2023-07-10', type: 'expense' }
+      ],
+      balance: 1800000
     },
     { 
       id: 3, 
@@ -45,9 +63,10 @@ export const useDepartmentsHandlers = () => {
       leader: 'François Andriamasy', 
       leaderAvatar: null,
       memberCount: 16, 
-      nextMeeting: '25 Juillet 2023', 
       budget: 32000000,
-      status: 'active' 
+      status: 'active',
+      transactions: [],
+      balance: 0
     },
     { 
       id: 4, 
@@ -55,9 +74,10 @@ export const useDepartmentsHandlers = () => {
       leader: 'Natacha Rasolofo', 
       leaderAvatar: null,
       memberCount: 12, 
-      nextMeeting: '19 Juillet 2023', 
       budget: 18000000,
-      status: 'active' 
+      status: 'active',
+      transactions: [],
+      balance: 0
     },
     { 
       id: 5, 
@@ -65,9 +85,10 @@ export const useDepartmentsHandlers = () => {
       leader: 'Marie Razafindrakoto', 
       leaderAvatar: null,
       memberCount: 45, 
-      nextMeeting: '22 Juillet 2023', 
       budget: 22000000,
-      status: 'active' 
+      status: 'active',
+      transactions: [],
+      balance: 0
     },
     { 
       id: 6, 
@@ -75,9 +96,10 @@ export const useDepartmentsHandlers = () => {
       leader: 'Paul Ranaivo', 
       leaderAvatar: null,
       memberCount: 8, 
-      nextMeeting: '21 Juillet 2023', 
       budget: 15000000,
-      status: 'inactive' 
+      status: 'inactive',
+      transactions: [],
+      balance: 0
     }
   ]);
 
@@ -93,10 +115,12 @@ export const useDepartmentsHandlers = () => {
     setShowAddDepartmentModal(false);
   };
 
-  const handleSaveDepartment = (newDepartment: Omit<Department, 'id'>) => {
+  const handleSaveDepartment = (newDepartment: Omit<Department, 'id' | 'transactions' | 'balance'>) => {
     const departmentWithId: Department = {
       ...newDepartment,
-      id: departments.length + 1
+      id: departments.length + 1,
+      transactions: [],
+      balance: 0
     };
     
     setDepartments([...departments, departmentWithId]);
@@ -136,6 +160,35 @@ export const useDepartmentsHandlers = () => {
     }));
   };
 
+  const handleAddTransaction = (departmentId: number, transaction: Omit<Transaction, 'id'>) => {
+    setDepartments(departments.map(dept => {
+      if (dept.id === departmentId) {
+        const newTransaction = {
+          ...transaction,
+          id: dept.transactions.length + 1
+        };
+        
+        const newBalance = transaction.type === 'income' 
+          ? dept.balance + transaction.amount 
+          : dept.balance - transaction.amount;
+        
+        toast({
+          title: `Transaction enregistrée`,
+          description: `${transaction.type === 'income' ? 'Entrée' : 'Sortie'} de ${transaction.amount.toLocaleString()} Ar ajoutée au département "${dept.name}".`,
+        });
+        
+        return {
+          ...dept,
+          transactions: [...dept.transactions, newTransaction],
+          balance: newBalance
+        };
+      }
+      return dept;
+    }));
+    
+    setShowTransactionModal(false);
+  };
+
   const filteredDepartments = departments.filter(dept => 
     dept.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     dept.leader.toLowerCase().includes(searchQuery.toLowerCase())
@@ -152,12 +205,16 @@ export const useDepartmentsHandlers = () => {
     searchQuery,
     selectedDepartment,
     showAddDepartmentModal,
+    showTransactionModal,
     departmentPerformanceData,
     handleSearchChange,
     handleAddDepartment,
     handleCloseModal,
     handleSaveDepartment,
     handleDepartmentClick,
-    handleToggleStatus
+    handleToggleStatus,
+    handleAddTransaction,
+    setShowTransactionModal,
+    setSelectedDepartment
   };
 };

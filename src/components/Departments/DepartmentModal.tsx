@@ -5,22 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Department } from '@/hooks/useDepartmentsHandlers';
 
 interface DepartmentModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (department: Omit<Department, 'id'>) => void;
+  onSave: (department: Omit<Department, 'id' | 'transactions' | 'balance'>) => void;
 }
 
 const DepartmentModal: React.FC<DepartmentModalProps> = ({ open, onClose, onSave }) => {
-  const [formData, setFormData] = useState<Omit<Department, 'id'>>({
+  const [formData, setFormData] = useState<Omit<Department, 'id' | 'transactions' | 'balance'>>({
     name: '',
     leader: '',
     leaderAvatar: null,
     memberCount: 0,
-    nextMeeting: '',
     budget: 0,
     status: 'active'
   });
@@ -58,7 +56,6 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ open, onClose, onSave
       leader: '',
       leaderAvatar: null,
       memberCount: 0,
-      nextMeeting: '',
       budget: 0,
       status: 'active'
     });
@@ -109,18 +106,6 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ open, onClose, onSave
                 value={formData.memberCount || ''}
                 onChange={handleChange}
                 placeholder="Ex: 15"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="nextMeeting">Prochaine réunion</Label>
-              <Input
-                id="nextMeeting"
-                name="nextMeeting"
-                value={formData.nextMeeting}
-                onChange={handleChange}
-                placeholder="Ex: 15 Août 2023"
                 required
               />
             </div>

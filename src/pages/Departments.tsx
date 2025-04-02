@@ -11,7 +11,9 @@ import {
   DollarSign,
   ChevronRight,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  ArrowUpCircle,
+  ArrowDownCircle
 } from 'lucide-react';
 import PageLayout from '@/components/Layout/PageLayout';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -34,7 +36,9 @@ const Departments = () => {
     handleCloseModal,
     handleSaveDepartment,
     handleDepartmentClick,
-    handleToggleStatus
+    handleToggleStatus,
+    handleAddTransaction,
+    setSelectedDepartment
   } = useDepartmentsHandlers();
 
   // If a department is selected, show its details
@@ -43,7 +47,8 @@ const Departments = () => {
       <PageLayout>
         <DepartmentDetails 
           department={selectedDepartment} 
-          onBack={() => handleDepartmentClick(null)}
+          onBack={() => setSelectedDepartment(null)}
+          onAddTransaction={handleAddTransaction}
         />
       </PageLayout>
     );
@@ -110,7 +115,7 @@ const Departments = () => {
                       <p className="text-xs text-gray-400">Budget: {formatMGA(dept.budget)}</p>
                     </div>
                   </div>
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span className={`inline-block px-2 py-1 rounded-full text-xs ${
                       dept.memberCount > 30 ? 'bg-green-500/20 text-green-400' : 
                       dept.memberCount > 15 ? 'bg-blue-500/20 text-blue-400' : 
@@ -118,6 +123,20 @@ const Departments = () => {
                     }`}>
                       {dept.memberCount} membres
                     </span>
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center">
+                        <ArrowUpCircle size={14} className="text-green-400 mr-1" />
+                        <span className="text-xs text-green-400">
+                          {formatMGA(dept.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0))}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <ArrowDownCircle size={14} className="text-red-400 mr-1" />
+                        <span className="text-xs text-red-400">
+                          {formatMGA(dept.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0))}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -134,8 +153,8 @@ const Departments = () => {
                   <th className="p-3 text-sm font-semibold">Département</th>
                   <th className="p-3 text-sm font-semibold">Responsable</th>
                   <th className="p-3 text-sm font-semibold">Membres</th>
-                  <th className="p-3 text-sm font-semibold">Prochaine Réunion</th>
                   <th className="p-3 text-sm font-semibold">Budget</th>
+                  <th className="p-3 text-sm font-semibold">Solde</th>
                   <th className="p-3 text-sm font-semibold">Statut</th>
                   <th className="p-3 text-sm font-semibold">Actions</th>
                 </tr>
@@ -167,13 +186,12 @@ const Departments = () => {
                         <span>{dept.memberCount}</span>
                       </div>
                     </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-1">
-                        <Calendar size={14} className="text-gray-400" />
-                        <span>{dept.nextMeeting}</span>
-                      </div>
-                    </td>
                     <td className="p-3 font-medium">{formatMGA(dept.budget)}</td>
+                    <td className="p-3">
+                      <span className={dept.balance >= 0 ? 'text-green-400' : 'text-red-400'}>
+                        {formatMGA(dept.balance)}
+                      </span>
+                    </td>
                     <td className="p-3">
                       <Badge className={dept.status === 'active' 
                         ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
