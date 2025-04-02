@@ -11,6 +11,8 @@ import Events from "./pages/Events";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Inventory from "./pages/Inventory";
+import Construction from "./pages/Construction";
 
 const App = () => (
   <TooltipProvider>
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/events" element={<Events />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/construction" element={<Construction />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>

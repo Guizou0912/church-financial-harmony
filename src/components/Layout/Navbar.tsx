@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronDown, Menu, X, Home, BarChart3, Users, Calendar, Settings, DollarSign } from 'lucide-react';
+import { ChevronDown, Menu, X, Home, BarChart3, Users, Calendar, Settings, DollarSign, Package, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -13,6 +13,8 @@ const Navbar = () => {
     { title: 'Tableau de Bord', icon: <Home className="w-4 h-4" />, href: '/' },
     { title: 'Finances', icon: <DollarSign className="w-4 h-4" />, href: '/finances' },
     { title: 'Départements', icon: <Users className="w-4 h-4" />, href: '/departments' },
+    { title: 'Inventaire', icon: <Package className="w-4 h-4" />, href: '/inventory' },
+    { title: 'Construction', icon: <Building className="w-4 h-4" />, href: '/construction' },
     { title: 'Événements', icon: <Calendar className="w-4 h-4" />, href: '/events' },
     { title: 'Rapports', icon: <BarChart3 className="w-4 h-4" />, href: '/reports' },
     { title: 'Paramètres', icon: <Settings className="w-4 h-4" />, href: '/settings' },
