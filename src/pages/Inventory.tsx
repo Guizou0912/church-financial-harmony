@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import PageLayout from '@/components/Layout/PageLayout';
 import { Button } from '@/components/ui/button';
@@ -34,19 +34,20 @@ import {
   TabsTrigger 
 } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Package, Plus, Search, FileText, AlertTriangle } from 'lucide-react';
+import { Package, Plus, Search, FileText, AlertTriangle, Trash2, Edit, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 // Sample data for inventory items
 const initialItems = [
-  { id: '1', name: 'Chaises', category: 'Mobilier', quantity: 200, location: 'Salle principale', status: 'En stock', lastUpdate: '2023-07-10' },
-  { id: '2', name: 'Tables', category: 'Mobilier', quantity: 30, location: 'Salle annexe', status: 'En stock', lastUpdate: '2023-07-15' },
-  { id: '3', name: 'Micros HF', category: 'Équipement audio', quantity: 5, location: 'Local technique', status: 'En stock', lastUpdate: '2023-08-05' },
-  { id: '4', name: 'Bibles', category: 'Livres', quantity: 100, location: 'Bibliothèque', status: 'En stock', lastUpdate: '2023-06-22' },
-  { id: '5', name: 'Projecteurs', category: 'Équipement vidéo', quantity: 3, location: 'Salle principale', status: 'En stock', lastUpdate: '2023-09-01' },
-  { id: '6', name: 'Instruments de musique', category: 'Équipement musical', quantity: 8, location: 'Estrade', status: 'En stock', lastUpdate: '2023-08-12' },
-  { id: '7', name: 'Tasses', category: 'Ustensiles', quantity: 80, location: 'Cuisine', status: 'En stock', lastUpdate: '2023-07-20' },
-  { id: '8', name: 'Nappes', category: 'Textile', quantity: 20, location: 'Réserve', status: 'En stock', lastUpdate: '2023-08-15' },
+  { id: '1', name: 'Chaises', category: 'Mobilier', quantity: 200, location: 'Salle principale', status: 'En stock', lastUpdate: '2023-07-10', notes: 'Chaises pliantes en bon état' },
+  { id: '2', name: 'Tables', category: 'Mobilier', quantity: 30, location: 'Salle annexe', status: 'En stock', lastUpdate: '2023-07-15', notes: 'Tables rectangulaires' },
+  { id: '3', name: 'Micros HF', category: 'Équipement audio', quantity: 5, location: 'Local technique', status: 'En stock', lastUpdate: '2023-08-05', notes: 'Micros sans fil Shure' },
+  { id: '4', name: 'Bibles', category: 'Livres', quantity: 100, location: 'Bibliothèque', status: 'En stock', lastUpdate: '2023-06-22', notes: 'Bibles en français' },
+  { id: '5', name: 'Projecteurs', category: 'Équipement vidéo', quantity: 3, location: 'Salle principale', status: 'En stock', lastUpdate: '2023-09-01', notes: 'Projecteurs HD' },
+  { id: '6', name: 'Instruments de musique', category: 'Équipement musical', quantity: 8, location: 'Estrade', status: 'En stock', lastUpdate: '2023-08-12', notes: 'Guitares, piano, batterie' },
+  { id: '7', name: 'Tasses', category: 'Ustensiles', quantity: 8, location: 'Cuisine', status: 'En stock', lastUpdate: '2023-07-20', notes: 'Stock faible' },
+  { id: '8', name: 'Nappes', category: 'Textile', quantity: 20, location: 'Réserve', status: 'En stock', lastUpdate: '2023-08-15', notes: 'Nappes blanches' },
 ];
 
 // Categories for selection
@@ -83,6 +84,7 @@ interface InventoryItem {
   location: string;
   status: string;
   lastUpdate: string;
+  notes?: string;
 }
 
 const Inventory = () => {
@@ -90,22 +92,44 @@ const Inventory = () => {
   const [items, setItems] = useState<InventoryItem[]>(initialItems);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isLowStockDialogOpen, setIsLowStockDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id' | 'lastUpdate'>>({
     name: '',
     category: '',
     quantity: 1,
     location: '',
-    status: 'En stock'
+    status: 'En stock',
+    notes: ''
   });
+
+  useEffect(() => {
+    // Load items from localStorage if available
+    const savedItems = localStorage.getItem('inventoryItems');
+    if (savedItems) {
+      try {
+        setItems(JSON.parse(savedItems));
+      } catch (e) {
+        console.error("Error loading inventory from localStorage:", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Save to localStorage whenever items change
+    localStorage.setItem('inventoryItems', JSON.stringify(items));
+  }, [items]);
 
   // Filter items based on search query and active tab
   const filteredItems = items.filter(item => {
     const matchesSearch = 
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchQuery.toLowerCase());
+      item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase()));
     
     if (activeTab === 'all') return matchesSearch;
     if (activeTab === 'lowStock') return matchesSearch && item.quantity < 10;
@@ -144,7 +168,8 @@ const Inventory = () => {
       category: '',
       quantity: 1,
       location: '',
-      status: 'En stock'
+      status: 'En stock',
+      notes: ''
     });
     
     toast({
@@ -166,6 +191,80 @@ const Inventory = () => {
       }
       return item;
     }));
+  };
+
+  const handleEditItem = () => {
+    if (!selectedItem) return;
+
+    if (!selectedItem.name || !selectedItem.category || !selectedItem.location) {
+      toast({
+        title: "Informations incomplètes",
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setItems(items.map(item => {
+      if (item.id === selectedItem.id) {
+        return {
+          ...selectedItem,
+          lastUpdate: new Date().toISOString().split('T')[0]
+        };
+      }
+      return item;
+    }));
+
+    setIsEditDialogOpen(false);
+    setSelectedItem(null);
+
+    toast({
+      title: "Élément modifié",
+      description: `${selectedItem.name} a été mis à jour.`,
+    });
+  };
+
+  const handleDeleteItem = () => {
+    if (!selectedItem) return;
+
+    setItems(items.filter(item => item.id !== selectedItem.id));
+    setIsDeleteDialogOpen(false);
+    setSelectedItem(null);
+
+    toast({
+      title: "Élément supprimé",
+      description: `${selectedItem.name} a été supprimé de l'inventaire.`,
+    });
+  };
+
+  const exportToCSV = () => {
+    const csvContent = [
+      ["ID", "Nom", "Catégorie", "Quantité", "Emplacement", "État", "Dernière mise à jour", "Notes"],
+      ...items.map(item => [
+        item.id,
+        item.name,
+        item.category,
+        item.quantity.toString(),
+        item.location,
+        item.status,
+        item.lastUpdate,
+        item.notes || ""
+      ])
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `inventaire_eglise_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export réussi",
+      description: "L'inventaire a été exporté au format CSV.",
+    });
   };
 
   return (
@@ -197,15 +296,10 @@ const Inventory = () => {
             <Button 
               variant="outline" 
               className="flex items-center gap-2"
-              onClick={() => {
-                toast({
-                  title: "Export en cours",
-                  description: "L'inventaire est en cours d'exportation.",
-                });
-              }}
+              onClick={exportToCSV}
             >
-              <FileText className="h-4 w-4" />
-              Exporter
+              <Download className="h-4 w-4" />
+              Exporter CSV
             </Button>
             
             <Button 
@@ -296,6 +390,26 @@ const Inventory = () => {
                           >
                             +
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -376,6 +490,16 @@ const Inventory = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (optionnel)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Informations supplémentaires..."
+                value={newItem.notes || ''}
+                onChange={(e) => setNewItem({...newItem, notes: e.target.value})}
+              />
+            </div>
           </div>
           
           <DialogFooter>
@@ -383,6 +507,124 @@ const Inventory = () => {
               Annuler
             </Button>
             <Button onClick={handleAddItem}>Ajouter à l'inventaire</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog for editing inventory item */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl">Modifier un élément</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations de cet élément
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedItem && (
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nom de l'élément</Label>
+                <Input
+                  id="edit-name"
+                  value={selectedItem.name}
+                  onChange={(e) => setSelectedItem({...selectedItem, name: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-category">Catégorie</Label>
+                <Select 
+                  value={selectedItem.category} 
+                  onValueChange={(value) => setSelectedItem({...selectedItem, category: value})}
+                >
+                  <SelectTrigger id="edit-category">
+                    <SelectValue placeholder="Sélectionner une catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-quantity">Quantité</Label>
+                <Input
+                  id="edit-quantity"
+                  type="number"
+                  min="0"
+                  value={selectedItem.quantity}
+                  onChange={(e) => setSelectedItem({...selectedItem, quantity: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-location">Emplacement</Label>
+                <Select 
+                  value={selectedItem.location} 
+                  onValueChange={(value) => setSelectedItem({...selectedItem, location: value})}
+                >
+                  <SelectTrigger id="edit-location">
+                    <SelectValue placeholder="Sélectionner un emplacement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-notes">Notes (optionnel)</Label>
+                <Textarea
+                  id="edit-notes"
+                  placeholder="Informations supplémentaires..."
+                  value={selectedItem.notes || ''}
+                  onChange={(e) => setSelectedItem({...selectedItem, notes: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleEditItem}>Sauvegarder</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for deleting inventory item */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl">Supprimer un élément</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedItem && (
+            <div className="py-4">
+              <p>
+                Vous êtes sur le point de supprimer <strong>{selectedItem.name}</strong> de l'inventaire.
+              </p>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteItem}>Supprimer définitivement</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -407,6 +649,7 @@ const Inventory = () => {
                   <TableHead>Nom</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead>Quantité</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -415,6 +658,21 @@ const Inventory = () => {
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.category}</TableCell>
                     <TableCell className="text-yellow-500">{item.quantity}</TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          handleUpdateQuantity(item.id, 10);
+                          toast({
+                            title: "Stock mis à jour",
+                            description: `10 unités de ${item.name} ont été ajoutées.`,
+                          });
+                        }}
+                      >
+                        Réapprovisionner
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
