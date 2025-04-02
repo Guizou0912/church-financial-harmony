@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import PageLayout from '@/components/Layout/PageLayout';
 import { 
@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatMGA } from '@/lib/utils';
-import { Building, Calendar, CreditCard, FileText, Plus, Users } from 'lucide-react';
+import { Building, Calendar, CreditCard, FileText, Plus, Users, Search, Trash, Edit, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Types for projects and expenses
@@ -212,6 +212,11 @@ const Construction = () => {
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
+  const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [newProject, setNewProject] = useState<Omit<Project, 'id' | 'spent' | 'lastUpdate'>>({
     name: '',
@@ -223,6 +228,8 @@ const Construction = () => {
     manager: '',
   });
   
+  const [editProject, setEditProject] = useState<Project | null>(null);
+  
   const [newExpense, setNewExpense] = useState<Omit<Expense, 'id' | 'approved'>>({
     projectId: '',
     description: '',
@@ -232,10 +239,55 @@ const Construction = () => {
     supplier: '',
   });
 
-  // Filter projects based on status
-  const filteredProjects = statusFilter === 'Tous' 
-    ? projects 
-    : projects.filter(project => project.status === statusFilter);
+  // Load data from localStorage on mount if available
+  useEffect(() => {
+    const savedProjects = localStorage.getItem('constructionProjects');
+    const savedExpenses = localStorage.getItem('constructionExpenses');
+    
+    if (savedProjects) {
+      try {
+        setProjects(JSON.parse(savedProjects));
+      } catch (e) {
+        console.error('Error loading projects from localStorage:', e);
+      }
+    }
+    
+    if (savedExpenses) {
+      try {
+        setExpenses(JSON.parse(savedExpenses));
+      } catch (e) {
+        console.error('Error loading expenses from localStorage:', e);
+      }
+    }
+  }, []);
+
+  // Save data to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('constructionProjects', JSON.stringify(projects));
+  }, [projects]);
+  
+  useEffect(() => {
+    localStorage.setItem('constructionExpenses', JSON.stringify(expenses));
+  }, [expenses]);
+
+  // Filter projects based on status and search term
+  const filteredProjects = projects
+    .filter(project => statusFilter === 'Tous' ? true : project.status === statusFilter)
+    .filter(project => 
+      searchTerm === '' ? true : 
+      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.manager.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+  // Filter expenses based on search term
+  const filteredExpenses = expenses.filter(expense => 
+    searchTerm === '' ? true :
+    expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    expense.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    projects.find(p => p.id === expense.projectId)?.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Get expenses for a specific project
   const getProjectExpenses = (projectId: string) => {
@@ -294,6 +346,91 @@ const Construction = () => {
     toast({
       title: "Projet ajouté",
       description: `Le projet "${newProject.name}" a été créé avec succès.`,
+    });
+  };
+
+  // Handle editing a project
+  const handleEditProject = () => {
+    if (!editProject || !editProject.name || !editProject.startDate || !editProject.budget) {
+      toast({
+        title: "Informations incomplètes",
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    
+    const updatedProjects = projects.map(project => 
+      project.id === editProject.id 
+        ? {...editProject, lastUpdate: today} 
+        : project
+    );
+    
+    setProjects(updatedProjects);
+    setIsEditProjectOpen(false);
+    setEditProject(null);
+    
+    toast({
+      title: "Projet mis à jour",
+      description: `Le projet "${editProject.name}" a été mis à jour avec succès.`,
+    });
+  };
+
+  // Handle deleting a project
+  const handleDeleteProject = () => {
+    if (!projectToDelete) return;
+    
+    // First remove all associated expenses
+    const updatedExpenses = expenses.filter(expense => expense.projectId !== projectToDelete);
+    setExpenses(updatedExpenses);
+    
+    // Then remove the project
+    const updatedProjects = projects.filter(project => project.id !== projectToDelete);
+    setProjects(updatedProjects);
+    
+    setIsDeleteConfirmOpen(false);
+    setProjectToDelete(null);
+    
+    toast({
+      title: "Projet supprimé",
+      description: "Le projet et toutes ses dépenses associées ont été supprimés.",
+    });
+  };
+
+  // Handle deleting an expense
+  const handleDeleteExpense = () => {
+    if (!expenseToDelete) return;
+    
+    const expenseToRemove = expenses.find(e => e.id === expenseToDelete);
+    
+    // If the expense was approved, update the project spent amount
+    if (expenseToRemove && expenseToRemove.approved) {
+      const updatedProjects = projects.map(project => {
+        if (project.id === expenseToRemove.projectId) {
+          return {
+            ...project,
+            spent: Math.max(0, project.spent - expenseToRemove.amount),
+            lastUpdate: new Date().toISOString().split('T')[0]
+          };
+        }
+        return project;
+      });
+      
+      setProjects(updatedProjects);
+    }
+    
+    // Remove the expense
+    const updatedExpenses = expenses.filter(expense => expense.id !== expenseToDelete);
+    setExpenses(updatedExpenses);
+    
+    setIsDeleteConfirmOpen(false);
+    setExpenseToDelete(null);
+    
+    toast({
+      title: "Dépense supprimée",
+      description: "La dépense a été supprimée avec succès.",
     });
   };
 
@@ -373,6 +510,63 @@ const Construction = () => {
     });
   };
 
+  // Handle starting project edit
+  const handleStartEditProject = (project: Project) => {
+    setEditProject({...project});
+    setIsEditProjectOpen(true);
+  };
+
+  // Handle exporting projects report
+  const handleExportReport = () => {
+    try {
+      // Create CSV content
+      let csvContent = "ID,Nom,Description,Statut,Budget,Dépensé,Progression,Date début,Date fin,Responsable,Dernière mise à jour\n";
+      
+      projects.forEach(project => {
+        const progressPercentage = calculateProgress(project.spent, project.budget);
+        const csvRow = [
+          project.id,
+          `"${project.name}"`,
+          `"${project.description}"`,
+          project.status,
+          project.budget,
+          project.spent,
+          `${progressPercentage.toFixed(0)}%`,
+          project.startDate,
+          project.endDate || '',
+          `"${project.manager}"`,
+          project.lastUpdate
+        ].join(',');
+        
+        csvContent += csvRow + '\n';
+      });
+      
+      // Create and download the file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `projets_construction_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export réussi",
+        description: "Le rapport des projets a été exporté au format CSV.",
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      
+      toast({
+        title: "Erreur d'export",
+        description: "Une erreur est survenue lors de l'export du rapport.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Open project details modal
   const handleViewDetails = (project: Project) => {
     setSelectedProject(project);
@@ -397,12 +591,7 @@ const Construction = () => {
             <Button 
               variant="outline" 
               className="flex items-center gap-2"
-              onClick={() => {
-                toast({
-                  title: "Export en cours",
-                  description: "Le rapport des projets est en cours d'exportation.",
-                });
-              }}
+              onClick={handleExportReport}
             >
               <FileText className="h-4 w-4" />
               Exporter rapport
@@ -442,9 +631,18 @@ const Construction = () => {
             </TabsList>
             
             <TabsContent value="projects" className="pt-6">
-              <div className="flex justify-end mb-4">
+              <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    className="pl-8" 
+                    placeholder="Rechercher un projet..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Filtrer par statut" />
                   </SelectTrigger>
                   <SelectContent>
@@ -519,13 +717,32 @@ const Construction = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleViewDetails(project)}
-                          >
-                            Détails
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewDetails(project)}
+                            >
+                              Détails
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleStartEditProject(project)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setProjectToDelete(project.id);
+                                setIsDeleteConfirmOpen(true);
+                              }}
+                            >
+                              <Trash className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -535,6 +752,18 @@ const Construction = () => {
             </TabsContent>
             
             <TabsContent value="expenses" className="pt-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    className="pl-8" 
+                    placeholder="Rechercher une dépense..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -549,14 +778,14 @@ const Construction = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {expenses.length === 0 ? (
+                  {filteredExpenses.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-6 text-gray-400">
                         Aucune dépense trouvée
                       </TableCell>
                     </TableRow>
                   ) : (
-                    expenses.map((expense) => {
+                    filteredExpenses.map((expense) => {
                       const project = projects.find(p => p.id === expense.projectId);
                       return (
                         <TableRow key={expense.id} className="transition-colors hover:bg-white/5">
@@ -576,15 +805,28 @@ const Construction = () => {
                             </span>
                           </TableCell>
                           <TableCell>
-                            {!expense.approved && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleApproveExpense(expense.id)}
+                            <div className="flex items-center gap-2">
+                              {!expense.approved && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleApproveExpense(expense.id)}
+                                >
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                  Approuver
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setExpenseToDelete(expense.id);
+                                  setIsDeleteConfirmOpen(true);
+                                }}
                               >
-                                Approuver
+                                <Trash className="h-4 w-4 text-red-500" />
                               </Button>
-                            )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -700,6 +942,111 @@ const Construction = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Project Dialog */}
+      <Dialog open={isEditProjectOpen} onOpenChange={setIsEditProjectOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Modifier le projet</DialogTitle>
+            <DialogDescription>
+              Modifiez les détails du projet de construction
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editProject && (
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nom du projet</Label>
+                <Input
+                  id="edit-name"
+                  placeholder="Ex: Rénovation du toit"
+                  value={editProject.name}
+                  onChange={(e) => setEditProject({...editProject, name: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Input
+                  id="edit-description"
+                  placeholder="Description du projet"
+                  value={editProject.description}
+                  onChange={(e) => setEditProject({...editProject, description: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Statut</Label>
+                <Select 
+                  value={editProject.status} 
+                  onValueChange={(value: 'Planifié' | 'En cours' | 'Terminé' | 'En pause') => 
+                    setEditProject({...editProject, status: value})
+                  }
+                >
+                  <SelectTrigger id="edit-status">
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Planifié">Planifié</SelectItem>
+                    <SelectItem value="En cours">En cours</SelectItem>
+                    <SelectItem value="Terminé">Terminé</SelectItem>
+                    <SelectItem value="En pause">En pause</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-budget">Budget (Ar)</Label>
+                <Input
+                  id="edit-budget"
+                  type="number"
+                  placeholder="Ex: 50000000"
+                  value={editProject.budget || ''}
+                  onChange={(e) => setEditProject({...editProject, budget: Number(e.target.value)})}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-startDate">Date de début</Label>
+                  <Input
+                    id="edit-startDate"
+                    type="date"
+                    value={editProject.startDate}
+                    onChange={(e) => setEditProject({...editProject, startDate: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-endDate">Date de fin prévue</Label>
+                  <Input
+                    id="edit-endDate"
+                    type="date"
+                    value={editProject.endDate}
+                    onChange={(e) => setEditProject({...editProject, endDate: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-manager">Responsable</Label>
+                <Input
+                  id="edit-manager"
+                  placeholder="Nom du responsable"
+                  value={editProject.manager}
+                  onChange={(e) => setEditProject({...editProject, manager: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditProjectOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleEditProject}>Enregistrer les modifications</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Add Expense Dialog */}
       <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
         <DialogContent className="sm:max-w-md">
@@ -796,6 +1143,40 @@ const Construction = () => {
               Annuler
             </Button>
             <Button onClick={handleAddExpense}>Ajouter la dépense</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Confirmation de suppression</DialogTitle>
+            <DialogDescription>
+              {projectToDelete 
+                ? "Êtes-vous sûr de vouloir supprimer ce projet? Cette action supprimera également toutes les dépenses associées."
+                : "Êtes-vous sûr de vouloir supprimer cette dépense? Cette action est irréversible."}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 flex items-center justify-center">
+            <AlertCircle className="h-12 w-12 text-red-500" />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsDeleteConfirmOpen(false);
+              setProjectToDelete(null);
+              setExpenseToDelete(null);
+            }}>
+              Annuler
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={projectToDelete ? handleDeleteProject : handleDeleteExpense}
+            >
+              Supprimer
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
