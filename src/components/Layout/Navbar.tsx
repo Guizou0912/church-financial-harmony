@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  ChevronDown, Menu, X, Home, BarChart3, Users, 
+  Menu, X, Home, BarChart3, Users, 
   Calendar, Settings, DollarSign, Package, Building 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,15 +13,6 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -59,39 +50,18 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Hidden on Mobile */}
-          <div className="hidden md:flex items-center space-x-4">
-            <NavigationMenu>
-              <NavigationMenuList>
-                {menuItems.map((item) => (
-                  <NavigationMenuItem key={item.title}>
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        "flex items-center gap-1 px-3 py-2 text-sm text-gray-200 hover:text-white transition-all duration-200"
-                      )}
-                    >
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </Link>
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
-            
+          {/* Always use hamburger menu */}
+          <div className="flex items-center space-x-4">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              className="hidden md:block"
             >
               <Button className="bg-gradient-to-r from-church-cyan to-church-purple text-white">
                 Se Connecter
               </Button>
             </motion.div>
-          </div>
-
-          {/* Mobile Navigation (Hamburger Menu) */}
-          <div className="md:hidden">
+            
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
@@ -111,7 +81,7 @@ const Navbar = () => {
                       <span>{item.title}</span>
                     </Link>
                   ))}
-                  <div className="pt-4">
+                  <div className="pt-4 md:hidden">
                     <Button className="w-full bg-gradient-to-r from-church-cyan to-church-purple text-white">
                       Se Connecter
                     </Button>
