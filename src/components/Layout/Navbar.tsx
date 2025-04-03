@@ -2,9 +2,26 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronDown, Menu, X, Home, BarChart3, Users, Calendar, Settings, DollarSign, Package, Building } from 'lucide-react';
+import { 
+  ChevronDown, Menu, X, Home, BarChart3, Users, 
+  Calendar, Settings, DollarSign, Package, Building 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,8 +36,6 @@ const Navbar = () => {
     { title: 'Rapports', icon: <BarChart3 className="w-4 h-4" />, href: '/reports' },
     { title: 'Paramètres', icon: <Settings className="w-4 h-4" />, href: '/settings' },
   ];
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   return (
     <motion.nav 
@@ -44,28 +59,27 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Menu pour ordinateur */}
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-4">
-              {menuItems.map((item) => (
-                <motion.div
-                  key={item.title}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    to={item.href}
-                    className="flex items-center px-3 py-2 text-sm rounded-md text-gray-200 hover:text-white hover:bg-white/10 transition-all duration-200"
-                  >
-                    {item.icon}
-                    <span className="ml-2">{item.title}</span>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          <div className="hidden md:block">
+          {/* Desktop Navigation - Hidden on Mobile */}
+          <div className="hidden md:flex items-center space-x-4">
+            <NavigationMenu>
+              <NavigationMenuList>
+                {menuItems.map((item) => (
+                  <NavigationMenuItem key={item.title}>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        "flex items-center gap-1 px-3 py-2 text-sm text-gray-200 hover:text-white transition-all duration-200"
+                      )}
+                    >
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </Link>
+                  </NavigationMenuItem>
+                ))}
+              </NavigationMenuList>
+            </NavigationMenu>
+            
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -76,45 +90,35 @@ const Navbar = () => {
             </motion.div>
           </div>
 
-          {/* Bouton du menu mobile */}
-          <div className="flex md:hidden">
-            <button
-              onClick={toggleMenu}
-              className="text-gray-300 hover:text-white focus:outline-none"
-            >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Menu mobile */}
-      <div
-        className={cn(
-          "md:hidden transition-all duration-300 ease-in-out overflow-hidden",
-          isMenuOpen ? "max-h-screen" : "max-h-0"
-        )}
-      >
-        <div className="px-2 pt-2 pb-3 space-y-1 glassmorphism">
-          {menuItems.map((item) => (
-            <Link
-              key={item.title}
-              to={item.href}
-              className="flex items-center px-3 py-2 text-base rounded-md text-gray-200 hover:text-white hover:bg-white/10"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {item.icon}
-              <span className="ml-3">{item.title}</span>
-            </Link>
-          ))}
-          <div className="pt-2">
-            <Button className="w-full bg-gradient-to-r from-church-cyan to-church-purple text-white">
-              Se Connecter
-            </Button>
+          {/* Mobile Navigation (Hamburger Menu) */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
+                  <Menu className="w-6 h-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] glassmorphism text-white">
+                <div className="flex flex-col space-y-4 mt-8">
+                  {menuItems.map((item) => (
+                    <Link
+                      key={item.title}
+                      to={item.href}
+                      className="flex items-center space-x-3 px-4 py-3 text-base rounded-md text-gray-200 hover:text-white hover:bg-white/10"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </Link>
+                  ))}
+                  <div className="pt-4">
+                    <Button className="w-full bg-gradient-to-r from-church-cyan to-church-purple text-white">
+                      Se Connecter
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
