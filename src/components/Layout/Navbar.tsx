@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Menu, X, Home, BarChart3, Users, 
-  Calendar, Settings, DollarSign, Package, Building 
+  Calendar, Settings, DollarSign, Package, Building, LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -13,20 +13,44 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, userRole, signOut } = useAuth();
 
+  // Define accessible menu items based on user role
   const menuItems = [
-    { title: 'Tableau de Bord', icon: <Home className="w-4 h-4" />, href: '/' },
-    { title: 'Finances', icon: <DollarSign className="w-4 h-4" />, href: '/finances' },
-    { title: 'Départements', icon: <Users className="w-4 h-4" />, href: '/departments' },
-    { title: 'Inventaire', icon: <Package className="w-4 h-4" />, href: '/inventory' },
-    { title: 'Construction', icon: <Building className="w-4 h-4" />, href: '/construction' },
-    { title: 'Événements', icon: <Calendar className="w-4 h-4" />, href: '/events' },
-    { title: 'Rapports', icon: <BarChart3 className="w-4 h-4" />, href: '/reports' },
-    { title: 'Paramètres', icon: <Settings className="w-4 h-4" />, href: '/settings' },
+    { title: 'Tableau de Bord', icon: <Home className="w-4 h-4" />, href: '/', roles: ['viewer', 'manager', 'admin'] },
+    { title: 'Finances', icon: <DollarSign className="w-4 h-4" />, href: '/finances', roles: ['manager', 'admin'] },
+    { title: 'Départements', icon: <Users className="w-4 h-4" />, href: '/departments', roles: ['manager', 'admin'] },
+    { title: 'Inventaire', icon: <Package className="w-4 h-4" />, href: '/inventory', roles: ['manager', 'admin'] },
+    { title: 'Construction', icon: <Building className="w-4 h-4" />, href: '/construction', roles: ['manager', 'admin'] },
+    { title: 'Événements', icon: <Calendar className="w-4 h-4" />, href: '/events', roles: ['viewer', 'manager', 'admin'] },
+    { title: 'Rapports', icon: <BarChart3 className="w-4 h-4" />, href: '/reports', roles: ['viewer', 'manager', 'admin'] },
+    { title: 'Paramètres', icon: <Settings className="w-4 h-4" />, href: '/settings', roles: ['viewer', 'manager', 'admin'] },
   ];
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => {
+    if (!userRole) return false;
+    return item.roles.includes(userRole);
+  });
+
+  // Function to get user's initials for avatar
+  const getUserInitials = () => {
+    if (!user?.email) return '?';
+    return user.email.substring(0, 2).toUpperCase();
+  };
 
   return (
     <motion.nav 
@@ -50,17 +74,59 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Always use hamburger menu */}
           <div className="flex items-center space-x-4">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hidden md:block"
-            >
-              <Button className="bg-gradient-to-r from-church-cyan to-church-purple text-white">
-                Se Connecter
-              </Button>
-            </motion.div>
+            {user ? (
+              <div className="hidden md:flex items-center space-x-2">
+                {userRole && (
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    userRole === 'admin' ? 'bg-purple-500/20 text-purple-400' : 
+                    userRole === 'manager' ? 'bg-blue-500/20 text-blue-400' : 
+                    'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {userRole === 'admin' ? 'Administrateur' : 
+                     userRole === 'manager' ? 'Gestionnaire' : 'Observateur'}
+                  </span>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative rounded-full" size="icon">
+                      <Avatar>
+                        <AvatarFallback className="bg-church-purple text-white">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Paramètres</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={signOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Se déconnecter</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="hidden md:block"
+              >
+                <Button 
+                  className="bg-gradient-to-r from-church-cyan to-church-purple text-white"
+                  asChild
+                >
+                  <Link to="/auth">Se Connecter</Link>
+                </Button>
+              </motion.div>
+            )}
             
             <Sheet>
               <SheetTrigger asChild>
@@ -70,7 +136,30 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] glassmorphism text-white">
                 <div className="flex flex-col space-y-4 mt-8">
-                  {menuItems.map((item) => (
+                  {user && (
+                    <div className="flex items-center gap-2 px-4 py-2 mb-2">
+                      <Avatar>
+                        <AvatarFallback className="bg-church-purple text-white">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{user.email}</p>
+                        {userRole && (
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            userRole === 'admin' ? 'bg-purple-500/20 text-purple-400' : 
+                            userRole === 'manager' ? 'bg-blue-500/20 text-blue-400' : 
+                            'bg-gray-500/20 text-gray-400'
+                          }`}>
+                            {userRole === 'admin' ? 'Administrateur' : 
+                             userRole === 'manager' ? 'Gestionnaire' : 'Observateur'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {filteredMenuItems.map((item) => (
                     <Link
                       key={item.title}
                       to={item.href}
@@ -81,11 +170,29 @@ const Navbar = () => {
                       <span>{item.title}</span>
                     </Link>
                   ))}
-                  <div className="pt-4 md:hidden">
-                    <Button className="w-full bg-gradient-to-r from-church-cyan to-church-purple text-white">
-                      Se Connecter
+                  
+                  {user ? (
+                    <Button 
+                      variant="outline" 
+                      className="mt-4 mx-4"
+                      onClick={() => {
+                        signOut();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Se déconnecter
                     </Button>
-                  </div>
+                  ) : (
+                    <div className="pt-4 mx-4">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-church-cyan to-church-purple text-white"
+                        asChild
+                      >
+                        <Link to="/auth">Se Connecter</Link>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>

@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { AuthProvider, RequireAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Finances from "./pages/Finances";
 import Departments from "./pages/Departments";
@@ -13,25 +14,70 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Inventory from "./pages/Inventory";
 import Construction from "./pages/Construction";
+import Auth from "./pages/Auth";
 
 const App = () => (
   <TooltipProvider>
     <Toaster />
     <Sonner />
     <BrowserRouter>
-      <AnimatePresence mode="wait">
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/finances" element={<Finances />} />
-          <Route path="/departments" element={<Departments />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/construction" element={<Construction />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AnimatePresence>
+      <AuthProvider>
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            
+            <Route path="/" element={
+              <RequireAuth requiredRole={["viewer", "manager", "admin"]}>
+                <Index />
+              </RequireAuth>
+            } />
+            
+            <Route path="/finances" element={
+              <RequireAuth requiredRole={["manager", "admin"]}>
+                <Finances />
+              </RequireAuth>
+            } />
+            
+            <Route path="/departments" element={
+              <RequireAuth requiredRole={["manager", "admin"]}>
+                <Departments />
+              </RequireAuth>
+            } />
+            
+            <Route path="/events" element={
+              <RequireAuth requiredRole={["viewer", "manager", "admin"]}>
+                <Events />
+              </RequireAuth>
+            } />
+            
+            <Route path="/reports" element={
+              <RequireAuth requiredRole={["viewer", "manager", "admin"]}>
+                <Reports />
+              </RequireAuth>
+            } />
+            
+            <Route path="/settings" element={
+              <RequireAuth requiredRole={["viewer", "manager", "admin"]}>
+                <Settings />
+              </RequireAuth>
+            } />
+            
+            <Route path="/inventory" element={
+              <RequireAuth requiredRole={["manager", "admin"]}>
+                <Inventory />
+              </RequireAuth>
+            } />
+            
+            <Route path="/construction" element={
+              <RequireAuth requiredRole={["manager", "admin"]}>
+                <Construction />
+              </RequireAuth>
+            } />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AnimatePresence>
+      </AuthProvider>
     </BrowserRouter>
   </TooltipProvider>
 );

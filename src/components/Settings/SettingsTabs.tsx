@@ -1,15 +1,20 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Users, Bell, Lock, Globe, Database } from 'lucide-react';
+import { User, Users, Bell, Lock, Globe, Database, ShieldCheck } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import ProfileSettings from './ProfileSettings';
 import UsersSettings from './UsersSettings';
 import SecuritySettings from './SecuritySettings';
 import NotificationsSettings from './NotificationsSettings';
 import GeneralSettings from './GeneralSettings';
 import BackupSettings from './BackupSettings';
+import RoleManagement from './RoleManagement';
 
 const SettingsTabs = () => {
+  const { userRole } = useAuth();
+  const isAdmin = userRole === 'admin';
+
   return (
     <Tabs defaultValue="profile" className="w-full">
       <div className="flex border-b border-white/10">
@@ -19,10 +24,18 @@ const SettingsTabs = () => {
               <User className="h-4 w-4 mr-2" />
               Profil
             </TabsTrigger>
-            <TabsTrigger value="users" className="justify-start px-4 py-2">
-              <Users className="h-4 w-4 mr-2" />
-              Utilisateurs
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="users" className="justify-start px-4 py-2">
+                <Users className="h-4 w-4 mr-2" />
+                Utilisateurs
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="roles" className="justify-start px-4 py-2">
+                <ShieldCheck className="h-4 w-4 mr-2" />
+                Rôles
+              </TabsTrigger>
+            )}
             <TabsTrigger value="security" className="justify-start px-4 py-2">
               <Lock className="h-4 w-4 mr-2" />
               Sécurité
@@ -35,10 +48,12 @@ const SettingsTabs = () => {
               <Globe className="h-4 w-4 mr-2" />
               Général
             </TabsTrigger>
-            <TabsTrigger value="backup" className="justify-start px-4 py-2">
-              <Database className="h-4 w-4 mr-2" />
-              Sauvegarde & Export
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="backup" className="justify-start px-4 py-2">
+                <Database className="h-4 w-4 mr-2" />
+                Sauvegarde & Export
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -48,6 +63,9 @@ const SettingsTabs = () => {
           </TabsContent>
           <TabsContent value="users">
             <UsersSettings />
+          </TabsContent>
+          <TabsContent value="roles">
+            <RoleManagement />
           </TabsContent>
           <TabsContent value="security">
             <SecuritySettings />
