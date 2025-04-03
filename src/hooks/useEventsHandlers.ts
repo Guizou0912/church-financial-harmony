@@ -108,15 +108,46 @@ export const useEventsHandlers = () => {
   const [events, setEvents] = useState<EventType[]>(initialEvents);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filtrer les événements à venir et passés
-  const upcomingEvents = events.filter(e => e.status === 'upcoming' || e.status === 'ongoing');
-  const pastEvents = events.filter(e => e.status === 'completed' || e.status === 'cancelled');
+  const filteredEvents = events.filter(event => 
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.organizer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const upcomingEvents = filteredEvents.filter(e => e.status === 'upcoming' || e.status === 'ongoing');
+  const pastEvents = filteredEvents.filter(e => e.status === 'completed' || e.status === 'cancelled');
 
   // Ouvrir le modal pour ajouter une transaction
   const openTransactionModal = (event: EventType) => {
     setSelectedEvent(event);
     setShowTransactionModal(true);
+  };
+
+  // Ouvrir le modal pour ajouter un nouvel événement
+  const openEventModal = () => {
+    setShowEventModal(true);
+  };
+
+  // Gérer l'ajout d'un nouvel événement
+  const handleAddEvent = (eventData: Omit<EventType, 'id' | 'transactions'>) => {
+    const newEvent: EventType = {
+      ...eventData,
+      id: events.length > 0 ? Math.max(...events.map(e => e.id)) + 1 : 1,
+      transactions: []
+    };
+    
+    setEvents([...events, newEvent]);
+    setShowEventModal(false);
+    
+    toast({
+      title: "Événement créé",
+      description: `L'événement "${newEvent.title}" a été créé avec succès`,
+    });
   };
 
   // Gérer l'ajout d'une transaction
@@ -237,6 +268,12 @@ export const useEventsHandlers = () => {
     handleAddTransaction,
     handleDeleteTransaction,
     exportEventTransactionsCSV,
-    setShowTransactionModal
+    setShowTransactionModal,
+    openEventModal,
+    showEventModal,
+    setShowEventModal,
+    handleAddEvent,
+    searchQuery,
+    setSearchQuery
   };
 };

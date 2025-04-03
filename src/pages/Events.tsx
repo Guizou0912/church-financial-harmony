@@ -8,6 +8,7 @@ import PageLayout from '@/components/Layout/PageLayout';
 import EventCard from '@/components/Events/EventCard';
 import EventStats from '@/components/Events/EventStats';
 import AddTransactionModal from '@/components/Events/AddTransactionModal';
+import AddEventModal from '@/components/Events/AddEventModal';
 import { useEventsHandlers } from '@/hooks/useEventsHandlers';
 
 const Events = () => {
@@ -21,7 +22,13 @@ const Events = () => {
     handleAddTransaction,
     handleDeleteTransaction,
     exportEventTransactionsCSV,
-    setShowTransactionModal
+    setShowTransactionModal,
+    openEventModal,
+    showEventModal,
+    setShowEventModal,
+    handleAddEvent,
+    searchQuery,
+    setSearchQuery
   } = useEventsHandlers();
 
   return (
@@ -44,9 +51,11 @@ const Events = () => {
                 type="text"
                 placeholder="Rechercher un événement..."
                 className="pl-8 pr-4 py-2 bg-white/5 border border-white/10 rounded-md text-sm w-64 focus:outline-none focus:ring-2 focus:ring-church-cyan"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button className="bg-gradient-to-r from-church-cyan to-church-purple">
+            <Button className="bg-gradient-to-r from-church-cyan to-church-purple" onClick={openEventModal}>
               <PlusCircle size={16} className="mr-1" />
               Nouvel événement
             </Button>
@@ -68,29 +77,41 @@ const Events = () => {
             
             <TabsContent value="upcoming" className="mt-6">
               <div className="space-y-4">
-                {upcomingEvents.map((event) => (
-                  <EventCard 
-                    key={event.id}
-                    event={event}
-                    onOpenTransactionModal={openTransactionModal}
-                    onDeleteTransaction={handleDeleteTransaction}
-                    onExportTransactionsCSV={exportEventTransactionsCSV}
-                  />
-                ))}
+                {upcomingEvents.length > 0 ? (
+                  upcomingEvents.map((event) => (
+                    <EventCard 
+                      key={event.id}
+                      event={event}
+                      onOpenTransactionModal={openTransactionModal}
+                      onDeleteTransaction={handleDeleteTransaction}
+                      onExportTransactionsCSV={exportEventTransactionsCSV}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    {searchQuery ? "Aucun événement trouvé pour cette recherche." : "Aucun événement à venir."}
+                  </div>
+                )}
               </div>
             </TabsContent>
             
             <TabsContent value="past" className="mt-6">
               <div className="space-y-4">
-                {pastEvents.map((event) => (
-                  <EventCard 
-                    key={event.id}
-                    event={event}
-                    onOpenTransactionModal={openTransactionModal}
-                    onDeleteTransaction={handleDeleteTransaction}
-                    onExportTransactionsCSV={exportEventTransactionsCSV}
-                  />
-                ))}
+                {pastEvents.length > 0 ? (
+                  pastEvents.map((event) => (
+                    <EventCard 
+                      key={event.id}
+                      event={event}
+                      onOpenTransactionModal={openTransactionModal}
+                      onDeleteTransaction={handleDeleteTransaction}
+                      onExportTransactionsCSV={exportEventTransactionsCSV}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    {searchQuery ? "Aucun événement trouvé pour cette recherche." : "Aucun événement passé."}
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -103,6 +124,13 @@ const Events = () => {
         onClose={() => setShowTransactionModal(false)}
         selectedEvent={selectedEvent}
         onAddTransaction={handleAddTransaction}
+      />
+
+      {/* Modal pour ajouter un nouvel événement */}
+      <AddEventModal
+        isOpen={showEventModal}
+        onClose={() => setShowEventModal(false)}
+        onAddEvent={handleAddEvent}
       />
     </PageLayout>
   );
