@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Menu, X, Home, BarChart3, Users, 
+  Home, BarChart3, Users, 
   Calendar, Settings, DollarSign, Package, Building, LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,10 +25,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, signOut, requiresAuth } = useAuth();
+  const location = useLocation();
 
-  // Define accessible menu items based on user role
+  // Define menu items
   const menuItems = [
     { title: 'Tableau de Bord', icon: <Home className="w-4 h-4" />, href: '/', roles: ['viewer', 'manager', 'admin'] },
     { title: 'Finances', icon: <DollarSign className="w-4 h-4" />, href: '/finances', roles: ['manager', 'admin'] },
@@ -40,16 +40,19 @@ const Navbar = () => {
     { title: 'Paramètres', icon: <Settings className="w-4 h-4" />, href: '/settings', roles: ['viewer', 'manager', 'admin'] },
   ];
 
-  // Filter menu items based on user role
-  const filteredMenuItems = menuItems.filter(item => {
-    if (!userRole) return false;
-    return item.roles.includes(userRole);
-  });
-
-  // Function to get user's initials for avatar
+  // Get user's initials for avatar
   const getUserInitials = () => {
     if (!user?.email) return '?';
     return user.email.substring(0, 2).toUpperCase();
+  };
+
+  // Handle menu item click
+  const handleMenuItemClick = (path: string) => {
+    // Check if authentication is required for this path
+    if (requiresAuth(path)) {
+      // If we need authentication and user is not logged in, the redirect will happen via AuthCheck
+      // No need to do anything special here
+    }
   };
 
   return (
@@ -131,7 +134,11 @@ const Navbar = () => {
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
-                  <Menu className="w-6 h-6" />
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Menu className="w-6 h-6" />
+                  </motion.div>
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] glassmorphism text-white">
@@ -159,26 +166,38 @@ const Navbar = () => {
                     </div>
                   )}
                   
-                  {filteredMenuItems.map((item) => (
-                    <Link
-                      key={item.title}
-                      to={item.href}
-                      className="flex items-center space-x-3 px-4 py-3 text-base rounded-md text-gray-200 hover:text-white hover:bg-white/10"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </Link>
-                  ))}
+                  {menuItems.map((item) => {
+                    // Determine if this menu item should show a login prompt based on roles
+                    const needsAuth = !user && item.roles.every(role => role !== 'viewer');
+                    const isDisabled = user && userRole && !item.roles.includes(userRole);
+                    
+                    return (
+                      <Link
+                        key={item.title}
+                        to={needsAuth ? "/auth" : isDisabled ? "#" : item.href}
+                        state={needsAuth ? { from: { pathname: item.href } } : undefined}
+                        className={cn(
+                          "flex items-center space-x-3 px-4 py-3 text-base rounded-md",
+                          isDisabled 
+                            ? "text-gray-500 cursor-not-allowed"
+                            : "text-gray-200 hover:text-white hover:bg-white/10"
+                        )}
+                        onClick={() => handleMenuItemClick(item.href)}
+                      >
+                        {item.icon}
+                        <span>{item.title}</span>
+                        {needsAuth && (
+                          <span className="ml-auto text-xs text-gray-400">🔒</span>
+                        )}
+                      </Link>
+                    );
+                  })}
                   
                   {user ? (
                     <Button 
                       variant="outline" 
                       className="mt-4 mx-4"
-                      onClick={() => {
-                        signOut();
-                        setIsMenuOpen(false);
-                      }}
+                      onClick={signOut}
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Se déconnecter

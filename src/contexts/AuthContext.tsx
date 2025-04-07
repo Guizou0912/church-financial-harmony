@@ -13,10 +13,10 @@ type AuthContextType = {
   user: User | null;
   userRole: AppRole | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   hasPermission: (requiredRole: AppRole | AppRole[]) => boolean;
+  requiresAuth: (path: string) => boolean;
 };
 
 // Create the context
@@ -120,33 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sign up function
-  const signUp = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Inscription réussie",
-        description: "Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter."
-      });
-      
-      navigate('/auth?mode=signin');
-    } catch (error: any) {
-      toast({
-        title: "Erreur d'inscription",
-        description: error?.message || "Une erreur s'est produite lors de l'inscription.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Sign out function
   const signOut = async () => {
     try {
@@ -156,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Déconnexion réussie",
         description: "Vous avez été déconnecté avec succès."
       });
-      navigate('/auth');
+      navigate('/');
     } catch (error: any) {
       toast({
         title: "Erreur de déconnexion",
@@ -188,16 +161,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
+  // Check if a route requires authentication
+  const requiresAuth = (path: string): boolean => {
+    // Routes that don't require authentication
+    if (path === '/' || path.startsWith('/auth')) {
+      return false;
+    }
+    
+    // Routes requiring auth with specific roles
+    const requiresManager = ['/finances', '/departments', '/inventory', '/construction'].includes(path);
+    const requiresManagerOrViewer = ['/events', '/reports'].includes(path);
+    
+    // Settings page depends on user role - everyone can access but features are limited based on role
+    const isSettingsPage = path === '/settings';
+
+    // If the user is already authenticated, don't require auth again
+    if (user) {
+      return false;
+    }
+    
+    // If the route requires specific permissions, check if user has them
+    if (requiresManager) {
+      return true;
+    }
+    
+    if (requiresManagerOrViewer) {
+      return true;
+    }
+    
+    // Settings page is accessible to all authenticated users
+    if (isSettingsPage) {
+      return true;
+    }
+    
+    // Default: no authentication required
+    return false;
+  };
+
   return (
     <AuthContext.Provider value={{
       session,
       user,
       userRole,
       signIn,
-      signUp,
       signOut,
       loading,
-      hasPermission
+      hasPermission,
+      requiresAuth
     }}>
       {children}
     </AuthContext.Provider>

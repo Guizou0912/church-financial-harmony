@@ -61,12 +61,16 @@ const SettingsTabs = () => {
           <TabsContent value="profile">
             <ProfileSettings />
           </TabsContent>
-          <TabsContent value="users">
-            <UsersSettings />
-          </TabsContent>
-          <TabsContent value="roles">
-            <RoleManagement />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="users">
+              <UsersSettings />
+            </TabsContent>
+          )}
+          {isAdmin && (
+            <TabsContent value="roles">
+              <RoleManagement />
+            </TabsContent>
+          )}
           <TabsContent value="security">
             <SecuritySettings />
           </TabsContent>
@@ -76,9 +80,11 @@ const SettingsTabs = () => {
           <TabsContent value="general">
             <GeneralSettings />
           </TabsContent>
-          <TabsContent value="backup">
-            <BackupSettings />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="backup">
+              <BackupSettings />
+            </TabsContent>
+          )}
         </div>
       </div>
     </Tabs>

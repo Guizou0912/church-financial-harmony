@@ -1,36 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/contexts/AuthContext';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, Mail, ArrowLeft } from 'lucide-react';
 
 const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signIn, signUp, loading } = useAuth();
+  const { signIn, loading } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  // Check if the mode is signin or signup from the URL query parameter
-  const queryParams = new URLSearchParams(location.search);
-  const mode = queryParams.get('mode') || 'signin';
+  // Get the return path from URL state or default to home
+  const from = location.state?.from?.pathname || '/';
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (mode === 'signup') {
-      await signUp(email, password);
-    } else {
-      await signIn(email, password);
-    }
-  };
-  
-  const toggleMode = () => {
-    navigate(`/auth?mode=${mode === 'signin' ? 'signup' : 'signin'}`);
+    await signIn(email, password);
   };
   
   return (
@@ -43,12 +33,10 @@ const Auth = () => {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold gradient-text">
-            {mode === 'signin' ? 'Se Connecter' : 'Créer un Compte'}
+            Se Connecter
           </h1>
           <p className="text-gray-400 mt-2">
-            {mode === 'signin' 
-              ? 'Connectez-vous pour accéder à votre compte' 
-              : 'Inscrivez-vous pour commencer à utiliser ChurchFinPro+'}
+            Connectez-vous pour accéder aux fonctionnalités avancées
           </p>
         </div>
         
@@ -85,37 +73,35 @@ const Auth = () => {
             </div>
           </div>
           
-          {mode === 'signin' && (
-            <div className="text-right">
-              <a href="#" className="text-sm text-church-cyan hover:underline">
-                Mot de passe oublié?
-              </a>
-            </div>
-          )}
+          <div className="text-right">
+            <a href="#" className="text-sm text-church-cyan hover:underline">
+              Mot de passe oublié?
+            </a>
+          </div>
           
           <Button 
             type="submit" 
             className="w-full bg-gradient-to-r from-church-cyan to-church-purple"
             disabled={loading}
           >
-            {loading 
-              ? 'Chargement...' 
-              : mode === 'signin' ? 'Se Connecter' : 'S\'inscrire'}
+            {loading ? 'Chargement...' : 'Se Connecter'}
           </Button>
         </form>
         
+        <div className="mt-6 flex justify-center">
+          <Button
+            variant="ghost"
+            className="flex items-center text-gray-400"
+            onClick={() => navigate('/')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retourner au tableau de bord
+          </Button>
+        </div>
+        
         <div className="mt-6 text-center">
-          <p className="text-gray-400">
-            {mode === 'signin' 
-              ? 'Pas encore de compte?' 
-              : 'Déjà un compte?'}
-            <Button
-              variant="link"
-              className="text-church-cyan"
-              onClick={toggleMode}
-            >
-              {mode === 'signin' ? 'S\'inscrire' : 'Se connecter'}
-            </Button>
+          <p className="text-gray-400 text-sm">
+            Les comptes sont créés et gérés par l'administrateur financier.
           </p>
         </div>
       </motion.div>
