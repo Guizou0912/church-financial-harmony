@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Home, BarChart3, Users, 
   Calendar, Settings, DollarSign, Package, Building, LogOut,
-  Menu // Add the Menu import here
+  Menu
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,7 @@ const Navbar = () => {
   const { user, userRole, signOut, requiresAuth } = useAuth();
   const location = useLocation();
 
-  // Define menu items
+  // Define menu items - ensure Events, Reports, and Settings are included
   const menuItems = [
     { title: 'Tableau de Bord', icon: <Home className="w-4 h-4" />, href: '/', roles: ['viewer', 'manager', 'admin'] },
     { title: 'Finances', icon: <DollarSign className="w-4 h-4" />, href: '/finances', roles: ['manager', 'admin'] },
@@ -47,13 +46,10 @@ const Navbar = () => {
     return user.email.substring(0, 2).toUpperCase();
   };
 
-  // Handle menu item click
+  // Handle menu item click - direct to login page if authentication required
   const handleMenuItemClick = (path: string) => {
-    // Check if authentication is required for this path
-    if (requiresAuth(path)) {
-      // If we need authentication and user is not logged in, the redirect will happen via AuthCheck
-      // No need to do anything special here
-    }
+    // We don't need to do anything special here
+    // The AuthCheck component in App.tsx will handle redirecting to auth if needed
   };
 
   return (

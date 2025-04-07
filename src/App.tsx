@@ -35,14 +35,13 @@ const AppWithAuth = () => (
   <AuthProvider>
     <AnimatePresence mode="wait">
       <Routes>
+        {/* Auth page - accessible to everyone */}
         <Route path="/auth" element={<Auth />} />
         
-        <Route path="/" element={
-          <AuthCheck>
-            <Index />
-          </AuthCheck>
-        } />
+        {/* Dashboard - accessible to everyone without login */}
+        <Route path="/" element={<Index />} />
         
+        {/* Role protected pages that check authentication before access */}
         <Route path="/finances" element={
           <AuthCheck>
             <RequireAuth requiredRole={["manager", "admin"]}>
