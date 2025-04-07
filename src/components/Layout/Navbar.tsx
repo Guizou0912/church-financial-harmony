@@ -4,7 +4,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Home, BarChart3, Users, 
-  Calendar, Settings, DollarSign, Package, Building, LogOut
+  Calendar, Settings, DollarSign, Package, Building, LogOut,
+  Menu // Add the Menu import here
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
