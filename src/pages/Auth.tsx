@@ -5,7 +5,26 @@ import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/contexts/AuthContext';
-import { Lock, Mail, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, ArrowLeft, Info } from 'lucide-react';
+import { 
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import { toast } from "@/components/ui/use-toast";
+
+// Interface pour les comptes de démonstration
+interface DemoAccount {
+  email: string;
+  password: string;
+  role: string;
+  description: string;
+  bgClass: string;
+  textClass: string;
+}
 
 const Auth = () => {
   const location = useLocation();
@@ -14,13 +33,51 @@ const Auth = () => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showDemoAccounts, setShowDemoAccounts] = useState(false);
   
   // Get the return path from URL state or default to home
   const from = location.state?.from?.pathname || '/';
   
+  // Comptes de démonstration prédéfinis
+  const demoAccounts: DemoAccount[] = [
+    {
+      email: 'admin@demo.com',
+      password: 'password123',
+      role: 'admin',
+      description: 'Accès complet à toutes les fonctionnalités',
+      bgClass: 'bg-purple-500/20',
+      textClass: 'text-purple-400'
+    },
+    {
+      email: 'manager@demo.com',
+      password: 'password123',
+      role: 'manager',
+      description: 'Gestion des transactions et rapports',
+      bgClass: 'bg-blue-500/20',
+      textClass: 'text-blue-400'
+    },
+    {
+      email: 'viewer@demo.com',
+      password: 'password123',
+      role: 'viewer',
+      description: 'Accès en lecture seule aux données',
+      bgClass: 'bg-gray-500/20',
+      textClass: 'text-gray-400'
+    }
+  ];
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await signIn(email, password);
+  };
+
+  const useDemo = (account: DemoAccount) => {
+    setEmail(account.email);
+    setPassword(account.password);
+    toast({
+      title: "Compte de démonstration sélectionné",
+      description: `${account.email} (${account.role}) prêt à être utilisé.`,
+    });
   };
   
   return (
@@ -87,6 +144,59 @@ const Auth = () => {
             {loading ? 'Chargement...' : 'Se Connecter'}
           </Button>
         </form>
+        
+        <div className="mt-8">
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center justify-center gap-2"
+            onClick={() => setShowDemoAccounts(!showDemoAccounts)}
+          >
+            <Info className="h-4 w-4" />
+            {showDemoAccounts ? 'Masquer' : 'Afficher'} les comptes de démonstration
+          </Button>
+          
+          {showDemoAccounts && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 space-y-3"
+            >
+              <p className="text-sm text-gray-400 mb-2">
+                Utilisez un de ces comptes pour tester l'application:
+              </p>
+              
+              {demoAccounts.map((account, index) => (
+                <Card key={index} className="bg-white/5 border-white/10">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center">
+                      <span className={`px-2 py-1 rounded-full text-xs mr-2 ${account.bgClass} ${account.textClass}`}>
+                        {account.role === 'admin' ? 'Administrateur' : 
+                         account.role === 'manager' ? 'Gestionnaire' : 'Observateur'}
+                      </span>
+                      {account.email}
+                    </CardTitle>
+                    <CardDescription>{account.description}</CardDescription>
+                  </CardHeader>
+                  <CardFooter className="pt-2">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="w-full text-xs"
+                      onClick={() => useDemo(account)}
+                    >
+                      Utiliser ce compte
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+              
+              <p className="text-xs text-gray-500 italic">
+                Mot de passe pour tous les comptes: password123
+              </p>
+            </motion.div>
+          )}
+        </div>
         
         <div className="mt-6 flex justify-center">
           <Button

@@ -4,8 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { toast } from "@/components/ui/use-toast";
 
 const UsersSettings = () => {
+  // Données utilisateurs fictives pour la démonstration
+  const demoUsers = [
+    { name: 'Admin Demo', email: 'admin@demo.com', role: 'admin', active: true },
+    { name: 'Manager Demo', email: 'manager@demo.com', role: 'manager', active: true },
+    { name: 'Viewer Demo', email: 'viewer@demo.com', role: 'viewer', active: true },
+    { name: 'Natacha Rasolofo', email: 'natacha@example.com', role: 'viewer', active: false },
+  ];
+
+  const handleAddUser = () => {
+    toast({
+      title: "Fonctionnalité de démonstration",
+      description: "L'ajout d'utilisateurs n'est pas disponible dans cette version de démonstration.",
+    });
+  };
+
+  const handleAction = (action: string, user: typeof demoUsers[0]) => {
+    toast({
+      title: "Fonctionnalité de démonstration",
+      description: `L'action "${action}" sur l'utilisateur ${user.email} n'est pas disponible dans cette version de démonstration.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -21,7 +44,10 @@ const UsersSettings = () => {
           placeholder="Rechercher un utilisateur..."
           className="px-3 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-church-cyan w-64"
         />
-        <Button className="bg-gradient-to-r from-church-cyan to-church-purple">
+        <Button 
+          className="bg-gradient-to-r from-church-cyan to-church-purple"
+          onClick={handleAddUser}
+        >
           Ajouter un utilisateur
         </Button>
       </div>
@@ -38,12 +64,7 @@ const UsersSettings = () => {
             </tr>
           </thead>
           <tbody>
-            {[
-              { name: 'Andry Ravalomanda', email: 'andry.r@gmail.com', role: 'admin', active: true },
-              { name: 'Sophie Rakoto', email: 'sophie@example.com', role: 'manager', active: true },
-              { name: 'Jean Ravalison', email: 'jean@example.com', role: 'manager', active: true },
-              { name: 'Natacha Rasolofo', email: 'natacha@example.com', role: 'viewer', active: false },
-            ].map((user, index) => (
+            {demoUsers.map((user, index) => (
               <tr key={index} className="border-b border-white/5 hover:bg-white/5">
                 <td className="p-3">
                   <div className="flex items-center gap-2">
@@ -71,9 +92,31 @@ const UsersSettings = () => {
                 </td>
                 <td className="p-3">
                   <div className="flex space-x-2">
-                    <Button variant="ghost" size="sm">Modifier</Button>
-                    {!user.active && <Button variant="ghost" size="sm">Activer</Button>}
-                    {user.active && <Button variant="ghost" size="sm">Désactiver</Button>}
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleAction('Modifier', user)}
+                    >
+                      Modifier
+                    </Button>
+                    {!user.active && 
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleAction('Activer', user)}
+                      >
+                        Activer
+                      </Button>
+                    }
+                    {user.active && 
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleAction('Désactiver', user)}
+                      >
+                        Désactiver
+                      </Button>
+                    }
                   </div>
                 </td>
               </tr>
