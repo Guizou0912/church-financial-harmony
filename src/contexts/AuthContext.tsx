@@ -19,6 +19,13 @@ type AuthContextType = {
   requiresAuth: (path: string) => boolean;
 };
 
+// Define demo accounts
+const DEMO_ACCOUNTS = {
+  'admin@demo.com': { role: 'admin', password: 'password123' },
+  'manager@demo.com': { role: 'manager', password: 'password123' },
+  'viewer@demo.com': { role: 'viewer', password: 'password123' },
+};
+
 // Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -97,6 +104,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      
+      // Check if this is a demo account
+      if (email in DEMO_ACCOUNTS && DEMO_ACCOUNTS[email as keyof typeof DEMO_ACCOUNTS].password === password) {
+        const role = DEMO_ACCOUNTS[email as keyof typeof DEMO_ACCOUNTS].role as AppRole;
+        
+        // Create a mock user and session for demo accounts
+        const mockUser = {
+          id: `demo-${role}`,
+          email: email,
+          user_metadata: { name: `${role.charAt(0).toUpperCase() + role.slice(1)} Demo` },
+          app_metadata: { role: role },
+          created_at: new Date().toISOString(),
+        } as unknown as User;
+        
+        // Mock session for demo accounts
+        const mockSession = {
+          access_token: `demo-token-${role}`,
+          refresh_token: `demo-refresh-${role}`,
+          user: mockUser,
+        } as unknown as Session;
+        
+        // Set the mock user and session
+        setUser(mockUser);
+        setSession(mockSession);
+        setUserRole(role);
+        
+        toast({
+          title: "Connexion de démonstration réussie",
+          description: `Vous êtes connecté en tant que compte de ${role}.`
+        });
+        
+        navigate('/');
+        return;
+      }
+      
+      // Regular Supabase authentication
       const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
@@ -124,6 +167,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
+      
+      // Check if this is a demo session
+      if (user?.id && user.id.startsWith('demo-')) {
+        // Just clear the session state for demo users
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+        
+        toast({
+          title: "Déconnexion réussie",
+          description: "Vous avez été déconnecté avec succès."
+        });
+        
+        navigate('/');
+        return;
+      }
+      
+      // Regular Supabase sign out
       await supabase.auth.signOut();
       toast({
         title: "Déconnexion réussie",
