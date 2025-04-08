@@ -54,7 +54,7 @@ const Finances = () => {
             <FinanceHeader 
               onFilterClick={handleFilterClick}
               onExportClick={handleExport}
-              onAddTransactionClick={handleAddTransaction}
+              onAddTransactionClick={() => handleAddTransaction}
               onApplyFilter={handleApplyFilter}
               onGenerateReport={handleGenerateReport}
             />

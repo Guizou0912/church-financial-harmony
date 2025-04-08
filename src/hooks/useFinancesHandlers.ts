@@ -4,6 +4,7 @@ import { TransactionFilters } from "@/components/Finances/TransactionFilter";
 import { ReportOptions } from "@/components/Finances/FinancialReportGenerator";
 import { generateFinancialReportPDF } from "@/utils/pdfGenerator";
 import { useSupabaseData, Transaction as SupabaseTransaction, Budget as SupabaseBudget } from '@/hooks/useSupabaseData';
+import { supabase } from '@/integrations/supabase/client';
 
 const mapTransactionToUi = (transaction: SupabaseTransaction) => {
   return {
@@ -185,7 +186,7 @@ export const useFinancesHandlers = () => {
       description: newTransaction.description,
       amount: newTransaction.amount,
       transaction_date: newTransaction.date || new Date().toISOString().split('T')[0],
-      transaction_type: newTransaction.type === 'revenu' ? 'income' : 'expense',
+      transaction_type: newTransaction.type === 'revenu' ? 'income' as const : 'expense' as const,
       category: newTransaction.category,
       department: newTransaction.department
     };

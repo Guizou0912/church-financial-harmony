@@ -27,7 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface DepartmentDetailsProps {
   department: Department;
   onBack: () => void;
-  onAddTransaction: (departmentId: number, transaction: Omit<Transaction, 'id'>) => void;
+  onAddTransaction: (departmentId: number | string, transaction: Omit<Transaction, 'id'>) => void;
 }
 
 const DepartmentDetails: React.FC<DepartmentDetailsProps> = ({ department, onBack, onAddTransaction }) => {
