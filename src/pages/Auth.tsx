@@ -152,7 +152,7 @@ const Auth = () => {
             onClick={() => setShowDemoAccounts(!showDemoAccounts)}
           >
             <Info className="h-4 w-4" />
-            {showDemoAccounts ? 'Masquer' : 'Afficher'} les comptes de démonstration
+            Utiliser un compte de démonstration
           </Button>
           
           {showDemoAccounts && (
@@ -162,10 +162,6 @@ const Auth = () => {
               exit={{ opacity: 0, height: 0 }}
               className="mt-4 space-y-3"
             >
-              <p className="text-sm text-gray-400 mb-2">
-                Utilisez un de ces comptes pour tester l'application:
-              </p>
-              
               {demoAccounts.map((account, index) => (
                 <Card key={index} className="bg-white/5 border-white/10">
                   <CardHeader className="pb-2">
@@ -207,12 +203,6 @@ const Auth = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retourner au tableau de bord
           </Button>
-        </div>
-        
-        <div className="mt-6 text-center">
-          <p className="text-gray-400 text-sm">
-            Les comptes sont créés et gérés par l'administrateur financier.
-          </p>
         </div>
       </motion.div>
     </div>
