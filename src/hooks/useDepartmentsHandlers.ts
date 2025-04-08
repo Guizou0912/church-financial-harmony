@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { useSupabaseData, Department as SupabaseDepartment, Transaction as SupabaseTransaction } from './useSupabaseData';
 
 export interface Transaction {
-  id: number;
+  id: number | string;
   description: string;
   amount: number;
   date: string;
@@ -11,7 +12,7 @@ export interface Transaction {
 }
 
 export interface Department {
-  id: number;
+  id: number | string;
   name: string;
   leader: string;
   leaderAvatar: string | null;
@@ -22,86 +23,80 @@ export interface Department {
   balance: number;
 }
 
+// Fonction pour convertir une entrée Supabase en format UI
+const mapDepartmentToUi = (department: SupabaseDepartment, transactions: SupabaseTransaction[] = []): Department => {
+  // Convertir les transactions associées à ce département
+  const departmentTransactions = transactions
+    .filter(t => t.department === department.name)
+    .map(t => ({
+      id: t.id,
+      description: t.description,
+      amount: Number(t.amount),
+      date: new Date(t.transaction_date).toISOString().split('T')[0],
+      type: t.transaction_type as 'income' | 'expense'
+    }));
+  
+  return {
+    id: department.id,
+    name: department.name,
+    leader: department.leader || '',
+    leaderAvatar: department.leader_avatar || null,
+    memberCount: Number(department.member_count) || 0,
+    budget: Number(department.budget) || 0,
+    status: department.status as 'active' | 'inactive',
+    transactions: departmentTransactions,
+    balance: Number(department.balance) || 0
+  };
+};
+
 export const useDepartmentsHandlers = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [showAddDepartmentModal, setShowAddDepartmentModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [departments, setDepartments] = useState<Department[]>([
-    { 
-      id: 1, 
-      name: 'Ministère du Culte', 
-      leader: 'Sophie Rakoto', 
-      leaderAvatar: null,
-      memberCount: 24, 
-      budget: 30000000,
-      status: 'active',
-      transactions: [
-        { id: 1, description: 'Don pour bibles', amount: 2000000, date: '2023-06-15', type: 'income' },
-        { id: 2, description: 'Achat matériel audio', amount: 1500000, date: '2023-06-30', type: 'expense' }
-      ],
-      balance: 500000
-    },
-    { 
-      id: 2, 
-      name: 'Jeunesse', 
-      leader: 'Jean Ravalison', 
-      leaderAvatar: null,
-      memberCount: 38, 
-      budget: 25000000,
-      status: 'active',
-      transactions: [
-        { id: 3, description: 'Contribution camp jeunesse', amount: 3000000, date: '2023-07-05', type: 'income' },
-        { id: 4, description: 'Matériel sportif', amount: 1200000, date: '2023-07-10', type: 'expense' }
-      ],
-      balance: 1800000
-    },
-    { 
-      id: 3, 
-      name: 'Missions & Évangélisation', 
-      leader: 'François Andriamasy', 
-      leaderAvatar: null,
-      memberCount: 16, 
-      budget: 32000000,
-      status: 'active',
-      transactions: [],
-      balance: 0
-    },
-    { 
-      id: 4, 
-      name: 'Administration', 
-      leader: 'Natacha Rasolofo', 
-      leaderAvatar: null,
-      memberCount: 12, 
-      budget: 18000000,
-      status: 'active',
-      transactions: [],
-      balance: 0
-    },
-    { 
-      id: 5, 
-      name: 'Ministère des Femmes', 
-      leader: 'Marie Razafindrakoto', 
-      leaderAvatar: null,
-      memberCount: 45, 
-      budget: 22000000,
-      status: 'active',
-      transactions: [],
-      balance: 0
-    },
-    { 
-      id: 6, 
-      name: 'Média & Communication', 
-      leader: 'Paul Ranaivo', 
-      leaderAvatar: null,
-      memberCount: 8, 
-      budget: 15000000,
-      status: 'inactive',
-      transactions: [],
-      balance: 0
-    }
-  ]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  const {
+    fetchDepartments,
+    addDepartment,
+    updateDepartment,
+    fetchTransactions,
+    addTransaction
+  } = useSupabaseData();
+
+  // Charger les données au démarrage
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Charger tous les départements
+        const departmentsData = await fetchDepartments();
+        
+        // Charger toutes les transactions
+        const transactionsData = await fetchTransactions();
+        
+        // Mapper les données pour l'UI
+        const departmentsForUi = departmentsData.map(dept => 
+          mapDepartmentToUi(dept, transactionsData)
+        );
+        
+        setDepartments(departmentsForUi);
+      } catch (error) {
+        console.error("Erreur lors du chargement des départements:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les départements",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -115,21 +110,31 @@ export const useDepartmentsHandlers = () => {
     setShowAddDepartmentModal(false);
   };
 
-  const handleSaveDepartment = (newDepartment: Omit<Department, 'id' | 'transactions' | 'balance'>) => {
-    const departmentWithId: Department = {
-      ...newDepartment,
-      id: departments.length + 1,
-      transactions: [],
+  const handleSaveDepartment = async (newDepartment: Omit<Department, 'id' | 'transactions' | 'balance'>) => {
+    // Conversion au format Supabase
+    const departmentData = {
+      name: newDepartment.name,
+      leader: newDepartment.leader,
+      leader_avatar: newDepartment.leaderAvatar || null,
+      member_count: newDepartment.memberCount,
+      budget: newDepartment.budget,
+      status: newDepartment.status,
       balance: 0
     };
     
-    setDepartments([...departments, departmentWithId]);
-    setShowAddDepartmentModal(false);
+    const result = await addDepartment(departmentData);
     
-    toast({
-      title: "Département ajouté",
-      description: `Le département "${newDepartment.name}" a été créé avec succès.`,
-    });
+    if (result) {
+      // Ajouter le nouveau département à la liste
+      const departmentWithUiFormat = mapDepartmentToUi(result);
+      setDepartments(prev => [...prev, departmentWithUiFormat]);
+      setShowAddDepartmentModal(false);
+      
+      toast({
+        title: "Département ajouté",
+        description: `Le département "${newDepartment.name}" a été créé avec succès.`,
+      });
+    }
   };
 
   const handleDepartmentClick = (department: Department) => {
@@ -141,50 +146,104 @@ export const useDepartmentsHandlers = () => {
     });
   };
 
-  const handleToggleStatus = (id: number) => {
-    setDepartments(departments.map(dept => {
-      if (dept.id === id) {
-        const newStatus = dept.status === 'active' ? 'inactive' : 'active';
-        
-        toast({
-          title: `Statut mis à jour`,
-          description: `Le département "${dept.name}" est maintenant ${newStatus === 'active' ? 'actif' : 'inactif'}.`,
-        });
-        
-        return {
-          ...dept,
+  const handleToggleStatus = async (id: string | number) => {
+    const department = departments.find(dept => dept.id === id);
+    if (!department) return;
+    
+    const newStatus = department.status === 'active' ? 'inactive' : 'active';
+    
+    // Mise à jour dans Supabase
+    const result = await updateDepartment(id.toString(), {
+      status: newStatus
+    });
+    
+    if (result) {
+      // Mise à jour locale
+      setDepartments(departments.map(dept => {
+        if (dept.id === id) {
+          toast({
+            title: `Statut mis à jour`,
+            description: `Le département "${dept.name}" est maintenant ${newStatus === 'active' ? 'actif' : 'inactif'}.`,
+          });
+          
+          return {
+            ...dept,
+            status: newStatus
+          };
+        }
+        return dept;
+      }));
+      
+      // Mettre à jour le département sélectionné si nécessaire
+      if (selectedDepartment?.id === id) {
+        setSelectedDepartment({
+          ...selectedDepartment,
           status: newStatus
-        };
+        });
       }
-      return dept;
-    }));
+    }
   };
 
-  const handleAddTransaction = (departmentId: number, transaction: Omit<Transaction, 'id'>) => {
-    setDepartments(departments.map(dept => {
-      if (dept.id === departmentId) {
-        const newTransaction = {
-          ...transaction,
-          id: dept.transactions.length + 1
-        };
-        
-        const newBalance = transaction.type === 'income' 
-          ? dept.balance + transaction.amount 
-          : dept.balance - transaction.amount;
-        
-        toast({
-          title: `Transaction enregistrée`,
-          description: `${transaction.type === 'income' ? 'Entrée' : 'Sortie'} de ${transaction.amount.toLocaleString()} Ar ajoutée au département "${dept.name}".`,
-        });
-        
-        return {
-          ...dept,
-          transactions: [...dept.transactions, newTransaction],
+  const handleAddTransaction = async (departmentId: number | string, transaction: Omit<Transaction, 'id'>) => {
+    const department = departments.find(dept => dept.id === departmentId);
+    if (!department) return;
+    
+    // Conversion au format Supabase
+    const transactionData = {
+      description: transaction.description,
+      amount: transaction.amount,
+      transaction_date: transaction.date,
+      transaction_type: transaction.type,
+      department: department.name
+    };
+    
+    const result = await addTransaction(transactionData);
+    
+    if (result) {
+      // Calculer le nouveau solde
+      const newBalance = transaction.type === 'income' 
+        ? Number(department.balance) + Number(transaction.amount) 
+        : Number(department.balance) - Number(transaction.amount);
+      
+      // Mettre à jour le département dans Supabase
+      await updateDepartment(departmentId.toString(), {
+        balance: newBalance
+      });
+      
+      // Mettre à jour l'état local
+      const uiTransaction = {
+        id: result.id,
+        description: result.description,
+        amount: Number(result.amount),
+        date: new Date(result.transaction_date).toISOString().split('T')[0],
+        type: result.transaction_type as 'income' | 'expense'
+      };
+      
+      setDepartments(departments.map(dept => {
+        if (dept.id === departmentId) {
+          toast({
+            title: `Transaction enregistrée`,
+            description: `${transaction.type === 'income' ? 'Entrée' : 'Sortie'} de ${transaction.amount.toLocaleString()} Ar ajoutée au département "${dept.name}".`,
+          });
+          
+          return {
+            ...dept,
+            transactions: [...dept.transactions, uiTransaction],
+            balance: newBalance
+          };
+        }
+        return dept;
+      }));
+      
+      // Mettre à jour le département sélectionné si nécessaire
+      if (selectedDepartment?.id === departmentId) {
+        setSelectedDepartment({
+          ...selectedDepartment,
+          transactions: [...selectedDepartment.transactions, uiTransaction],
           balance: newBalance
-        };
+        });
       }
-      return dept;
-    }));
+    }
     
     setShowTransactionModal(false);
   };
@@ -207,6 +266,7 @@ export const useDepartmentsHandlers = () => {
     showAddDepartmentModal,
     showTransactionModal,
     departmentPerformanceData,
+    loading,
     handleSearchChange,
     handleAddDepartment,
     handleCloseModal,

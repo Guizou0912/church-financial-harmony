@@ -1,19 +1,133 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { TransactionFilters } from "@/components/Finances/TransactionFilter";
 import { ReportOptions } from "@/components/Finances/FinancialReportGenerator";
 import { generateFinancialReportPDF } from "@/utils/pdfGenerator";
-import {
-  revenueData,
-  depenseData,
-  transactionsRevenues,
-  transactionsDepenses
-} from '@/services/financeData';
+import { useSupabaseData, Transaction as SupabaseTransaction, Budget as SupabaseBudget } from '@/hooks/useSupabaseData';
+
+const mapTransactionToUi = (transaction: SupabaseTransaction) => {
+  return {
+    id: transaction.id,
+    date: new Date(transaction.transaction_date).toLocaleDateString('fr-MG'),
+    description: transaction.description,
+    montant: Number(transaction.amount),
+    type: transaction.category || '',
+    fromDepartment: transaction.transaction_type === 'expense' ? undefined : transaction.department,
+    toDepartment: transaction.transaction_type === 'expense' ? transaction.department : undefined
+  };
+};
+
+const mapBudgetToUi = (budget: SupabaseBudget) => {
+  return {
+    id: budget.id,
+    name: budget.name,
+    spent: Number(budget.spent),
+    total: Number(budget.total),
+    color: budget.color || 'from-church-cyan to-blue-500'
+  };
+};
 
 export const useFinancesHandlers = () => {
   const [activeTab, setActiveTab] = useState('revenus');
   const { toast } = useToast();
+  const {
+    loading,
+    fetchTransactions,
+    addTransaction,
+    fetchBudgets,
+    addBudget,
+    updateBudget
+  } = useSupabaseData();
+  
+  const [transactionsRevenues, setTransactionsRevenues] = useState<any[]>([]);
+  const [transactionsDepenses, setTransactionsDepenses] = useState<any[]>([]);
+  const [budgetItems, setBudgetItems] = useState<any[]>([]);
+  
+  useEffect(() => {
+    const loadData = async () => {
+      const transactions = await fetchTransactions();
+      
+      const revenus = transactions
+        .filter(t => t.transaction_type === 'income')
+        .map(mapTransactionToUi);
+        
+      const depenses = transactions
+        .filter(t => t.transaction_type === 'expense')
+        .map(mapTransactionToUi);
+      
+      setTransactionsRevenues(revenus);
+      setTransactionsDepenses(depenses);
+      
+      const budgets = await fetchBudgets();
+      setBudgetItems(budgets.map(mapBudgetToUi));
+    };
+    
+    loadData();
+  }, []);
+
+  const revenueData = Array.from(
+    transactionsRevenues.reduce((acc, transaction) => {
+      const dateParts = transaction.date.split('/');
+      const month = parseInt(dateParts[1]) - 1;
+      const monthName = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][month];
+      
+      if (!acc.has(monthName)) {
+        acc.set(monthName, 0);
+      }
+      
+      acc.set(monthName, acc.get(monthName)! + transaction.montant);
+      return acc;
+    }, new Map<string, number>())
+  ).map(([name, value]) => ({ name, value }));
+  
+  const depenseData = Array.from(
+    transactionsDepenses.reduce((acc, transaction) => {
+      const dateParts = transaction.date.split('/');
+      const month = parseInt(dateParts[1]) - 1;
+      const monthName = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][month];
+      
+      if (!acc.has(monthName)) {
+        acc.set(monthName, 0);
+      }
+      
+      acc.set(monthName, acc.get(monthName)! + transaction.montant);
+      return acc;
+    }, new Map<string, number>())
+  ).map(([name, value]) => ({ name, value }));
+  
+  const depenseParCategorieData = Array.from(
+    transactionsDepenses.reduce((acc, transaction) => {
+      const category = transaction.type || 'Autres';
+      
+      if (!acc.has(category)) {
+        acc.set(category, 0);
+      }
+      
+      acc.set(category, acc.get(category)! + transaction.montant);
+      return acc;
+    }, new Map<string, number>())
+  ).map(([name, value]) => {
+    const total = transactionsDepenses.reduce((sum, t) => sum + t.montant, 0);
+    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+    return { name, value: percentage };
+  });
+  
+  const donParSourceData = Array.from(
+    transactionsRevenues.reduce((acc, transaction) => {
+      const category = transaction.type || 'Autres';
+      
+      if (!acc.has(category)) {
+        acc.set(category, 0);
+      }
+      
+      acc.set(category, acc.get(category)! + transaction.montant);
+      return acc;
+    }, new Map<string, number>())
+  ).map(([name, value]) => {
+    const total = transactionsRevenues.reduce((sum, t) => sum + t.montant, 0);
+    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+    return { name, value: percentage };
+  });
 
   const handleStatCardClick = (type: string) => {
     switch(type) {
@@ -66,11 +180,27 @@ export const useFinancesHandlers = () => {
     });
   };
 
-  const handleAddTransaction = () => {
-    toast({
-      title: "Nouvelle transaction",
-      description: "Formulaire d'ajout de transaction ouvert",
-    });
+  const handleAddTransaction = async (newTransaction: any) => {
+    const transaction = {
+      description: newTransaction.description,
+      amount: newTransaction.amount,
+      transaction_date: newTransaction.date || new Date().toISOString().split('T')[0],
+      transaction_type: newTransaction.type === 'revenu' ? 'income' : 'expense',
+      category: newTransaction.category,
+      department: newTransaction.department
+    };
+    
+    const result = await addTransaction(transaction);
+    
+    if (result) {
+      const uiTransaction = mapTransactionToUi(result);
+      
+      if (result.transaction_type === 'income') {
+        setTransactionsRevenues(prev => [uiTransaction, ...prev]);
+      } else {
+        setTransactionsDepenses(prev => [uiTransaction, ...prev]);
+      }
+    }
   };
 
   const handleExport = () => {
@@ -133,7 +263,52 @@ export const useFinancesHandlers = () => {
       title: "Filtres appliqués",
       description: "Les transactions ont été filtrées selon vos critères.",
     });
-    // In a real implementation, we would filter the transaction data here
+    
+    const fetchFilteredTransactions = async () => {
+      let query = supabase.from('transactions').select('*');
+      
+      if (filters.dateRange.from) {
+        const fromDate = filters.dateRange.from.toISOString().split('T')[0];
+        query = query.gte('transaction_date', fromDate);
+      }
+      
+      if (filters.dateRange.to) {
+        const toDate = filters.dateRange.to.toISOString().split('T')[0];
+        query = query.lte('transaction_date', toDate);
+      }
+      
+      if (filters.minAmount !== null) {
+        query = query.gte('amount', filters.minAmount);
+      }
+      
+      if (filters.maxAmount !== null) {
+        query = query.lte('amount', filters.maxAmount);
+      }
+      
+      if (filters.categories.length > 0) {
+        query = query.in('category', filters.categories);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching filtered transactions:', error);
+        return;
+      }
+      
+      const revenus = data
+        .filter((t: any) => t.transaction_type === 'income')
+        .map(mapTransactionToUi);
+        
+      const depenses = data
+        .filter((t: any) => t.transaction_type === 'expense')
+        .map(mapTransactionToUi);
+      
+      setTransactionsRevenues(revenus);
+      setTransactionsDepenses(depenses);
+    };
+    
+    fetchFilteredTransactions();
   };
 
   const handleGenerateReport = (options: ReportOptions) => {
@@ -144,13 +319,11 @@ export const useFinancesHandlers = () => {
 
     if (options.format === 'pdf') {
       try {
-        // Create combined transactions data
         const transactions = [
           ...options.includeRevenues ? transactionsRevenues : [],
           ...options.includeExpenses ? transactionsDepenses : []
         ];
 
-        // Get period text
         const getPeriodText = (period: string): string => {
           switch (period) {
             case 'month': return 'Mois courant';
@@ -161,7 +334,6 @@ export const useFinancesHandlers = () => {
           }
         };
 
-        // Generate and download PDF
         const doc = generateFinancialReportPDF({
           title: options.title,
           period: getPeriodText(options.period),
@@ -184,23 +356,22 @@ export const useFinancesHandlers = () => {
         });
       }
     }
-    // In a real implementation, we would generate the report here for other formats
   };
 
-  const handleSaveBudget = (items: any[]) => {
+  const handleSaveBudget = async (items: any[]) => {
+    for (const item of items) {
+      await updateBudget(item.id, {
+        name: item.name,
+        spent: item.spent,
+        total: item.total,
+        color: item.color
+      });
+    }
+    
     toast({
       title: "Budget mis à jour",
       description: "Les modifications du budget ont été enregistrées avec succès.",
     });
-    // In a real implementation, we would update the budget data here
-  };
-  
-  const handleSaveAlerts = (alerts: any[]) => {
-    toast({
-      title: "Alertes mises à jour",
-      description: "Les configurations d'alertes ont été enregistrées avec succès.",
-    });
-    // In a real implementation, we would save the alerts configuration here
   };
 
   return {
@@ -217,38 +388,18 @@ export const useFinancesHandlers = () => {
     handleApplyFilter,
     handleGenerateReport,
     handleSaveBudget,
-    handleSaveAlerts
+    revenueData,
+    depenseData,
+    transactionsRevenues,
+    transactionsDepenses,
+    donParSourceData,
+    depenseParCategorieData,
+    budgetItems,
+    loading
   };
 };
 
-// Export budgetItems directly from this file to avoid circular dependencies
-export const budgetItems = [
-  {
-    id: '1',
-    name: 'Ministère du Culte',
-    spent: 25000000,
-    total: 30000000,
-    color: 'from-church-cyan to-blue-500',
-  },
-  {
-    id: '2',
-    name: 'Programmes Jeunesse',
-    spent: 18000000,
-    total: 25000000,
-    color: 'from-church-purple to-church-magenta',
-  },
-  {
-    id: '3',
-    name: 'Missions & Sensibilisation',
-    spent: 30000000,
-    total: 32000000,
-    color: 'from-green-500 to-church-cyan',
-  },
-  {
-    id: '4',
-    name: 'Administration',
-    spent: 15000000,
-    total: 18000000,
-    color: 'from-church-magenta to-red-500',
-  },
-];
+export const getBudgetItems = () => {
+  const { fetchBudgets } = useSupabaseData();
+  return fetchBudgets().then(budgets => budgets.map(mapBudgetToUi));
+};

@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import TransactionTabs from './TransactionTabs';
 import BudgetProgressCard from '@/components/Dashboard/BudgetProgressCard';
 import QuickActions from '@/components/Finances/QuickActions';
-import { revenueData, depenseData, transactionsRevenues, transactionsDepenses } from '@/services/financeData';
 
 interface FinanceMainContentProps {
   activeTab: string;
@@ -13,6 +12,11 @@ interface FinanceMainContentProps {
   handleQuickActionClick: (actionType: string) => void;
   handleTransactionClick: (transaction: any, type: 'revenu' | 'depense') => void;
   handleChartClick: (chartType: string) => void;
+  revenueData: { name: string; value: number }[];
+  depenseData: { name: string; value: number }[];
+  transactionsRevenues: any[];
+  transactionsDepenses: any[];
+  budgetItems: any[];
 }
 
 const FinanceMainContent: React.FC<FinanceMainContentProps> = ({ 
@@ -20,8 +24,13 @@ const FinanceMainContent: React.FC<FinanceMainContentProps> = ({
   setActiveTab, 
   handleBudgetItemClick, 
   handleQuickActionClick, 
-  handleTransactionClick, 
-  handleChartClick 
+  handleTransactionClick,
+  handleChartClick,
+  revenueData,
+  depenseData,
+  transactionsRevenues,
+  transactionsDepenses,
+  budgetItems 
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -58,37 +67,5 @@ const FinanceMainContent: React.FC<FinanceMainContentProps> = ({
     </div>
   );
 };
-
-// Import budgetItems directly to avoid circular dependencies
-const budgetItems = [
-  {
-    id: '1',
-    name: 'Ministère du Culte',
-    spent: 25000000,
-    total: 30000000,
-    color: 'from-church-cyan to-blue-500',
-  },
-  {
-    id: '2',
-    name: 'Programmes Jeunesse',
-    spent: 18000000,
-    total: 25000000,
-    color: 'from-church-purple to-church-magenta',
-  },
-  {
-    id: '3',
-    name: 'Missions & Sensibilisation',
-    spent: 30000000,
-    total: 32000000,
-    color: 'from-green-500 to-church-cyan',
-  },
-  {
-    id: '4',
-    name: 'Administration',
-    spent: 15000000,
-    total: 18000000,
-    color: 'from-church-magenta to-red-500',
-  },
-];
 
 export default FinanceMainContent;
