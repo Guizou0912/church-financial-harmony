@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { TransactionFilters } from "@/components/Finances/TransactionFilter";
@@ -48,11 +49,17 @@ export const useFinancesHandlers = () => {
     const loadData = async () => {
       const transactions = await fetchTransactions();
       
-      const revenus = transactions
+      // Explicitly cast the transaction_type to the correct union type
+      const typedTransactions = transactions.map(tx => ({
+        ...tx,
+        transaction_type: tx.transaction_type as 'income' | 'expense'
+      }));
+      
+      const revenus = typedTransactions
         .filter(t => t.transaction_type === 'income')
         .map(mapTransactionToUi);
         
-      const depenses = transactions
+      const depenses = typedTransactions
         .filter(t => t.transaction_type === 'expense')
         .map(mapTransactionToUi);
       
@@ -296,12 +303,18 @@ export const useFinancesHandlers = () => {
         console.error('Error fetching filtered transactions:', error);
         return;
       }
+
+      // Explicitly cast the transaction_type to the correct union type
+      const typedData = data.map((t: any) => ({
+        ...t,
+        transaction_type: t.transaction_type as 'income' | 'expense'
+      }));
       
-      const revenus = data
+      const revenus = typedData
         .filter((t: any) => t.transaction_type === 'income')
         .map(mapTransactionToUi);
         
-      const depenses = data
+      const depenses = typedData
         .filter((t: any) => t.transaction_type === 'expense')
         .map(mapTransactionToUi);
       

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -278,7 +277,7 @@ const DepartmentDetails: React.FC<DepartmentDetailsProps> = ({ department, onBac
         open={showTransactionModal}
         onClose={() => setShowTransactionModal(false)}
         onSave={handleSaveTransaction}
-        departmentId={department.id}
+        departmentId={department.id as number}
       />
     </motion.div>
   );
