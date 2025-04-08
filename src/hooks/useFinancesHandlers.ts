@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { TransactionFilters } from "@/components/Finances/TransactionFilter";
@@ -73,69 +72,83 @@ export const useFinancesHandlers = () => {
     loadData();
   }, []);
 
-  const revenueData = Array.from(
-    transactionsRevenues.reduce((acc, transaction) => {
-      const dateParts = transaction.date.split('/');
-      const month = parseInt(dateParts[1]) - 1;
-      const monthName = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][month];
-      
-      if (!acc.has(monthName)) {
-        acc.set(monthName, 0);
-      }
-      
-      acc.set(monthName, acc.get(monthName)! + transaction.montant);
-      return acc;
-    }, new Map<string, number>())
-  ).map(([name, value]) => ({ name, value }));
+  const revenueData = transactionsRevenues.length > 0 ? 
+    Array.from(
+      transactionsRevenues.reduce((acc, transaction) => {
+        const dateParts = transaction.date.split('/');
+        const month = parseInt(dateParts[1]) - 1;
+        const monthName = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][month];
+        
+        if (!acc.has(monthName)) {
+          acc.set(monthName, 0);
+        }
+        
+        acc.set(monthName, acc.get(monthName)! + transaction.montant);
+        return acc;
+      }, new Map<string, number>())
+    ).map(([name, value]) => ({ name, value }))
+    : 
+    ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+      .map(name => ({ name, value: 0 }));
   
-  const depenseData = Array.from(
-    transactionsDepenses.reduce((acc, transaction) => {
-      const dateParts = transaction.date.split('/');
-      const month = parseInt(dateParts[1]) - 1;
-      const monthName = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][month];
-      
-      if (!acc.has(monthName)) {
-        acc.set(monthName, 0);
-      }
-      
-      acc.set(monthName, acc.get(monthName)! + transaction.montant);
-      return acc;
-    }, new Map<string, number>())
-  ).map(([name, value]) => ({ name, value }));
+  const depenseData = transactionsDepenses.length > 0 ?
+    Array.from(
+      transactionsDepenses.reduce((acc, transaction) => {
+        const dateParts = transaction.date.split('/');
+        const month = parseInt(dateParts[1]) - 1;
+        const monthName = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][month];
+        
+        if (!acc.has(monthName)) {
+          acc.set(monthName, 0);
+        }
+        
+        acc.set(monthName, acc.get(monthName)! + transaction.montant);
+        return acc;
+      }, new Map<string, number>())
+    ).map(([name, value]) => ({ name, value }))
+    :
+    ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+      .map(name => ({ name, value: 0 }));
   
-  const depenseParCategorieData = Array.from(
-    transactionsDepenses.reduce((acc, transaction) => {
-      const category = transaction.type || 'Autres';
-      
-      if (!acc.has(category)) {
-        acc.set(category, 0);
-      }
-      
-      acc.set(category, acc.get(category)! + transaction.montant);
-      return acc;
-    }, new Map<string, number>())
-  ).map(([name, value]) => {
-    const total = transactionsDepenses.reduce((sum, t) => sum + t.montant, 0);
-    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-    return { name, value: percentage };
-  });
+  const depenseParCategorieData = transactionsDepenses.length > 0 ?
+    Array.from(
+      transactionsDepenses.reduce((acc, transaction) => {
+        const category = transaction.type || 'Autres';
+        
+        if (!acc.has(category)) {
+          acc.set(category, 0);
+        }
+        
+        acc.set(category, acc.get(category)! + transaction.montant);
+        return acc;
+      }, new Map<string, number>())
+    ).map(([name, value]) => {
+      const total = transactionsDepenses.reduce((sum, t) => sum + t.montant, 0);
+      const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+      return { name, value: percentage };
+    })
+    :
+    [{ name: 'Pas de données', value: 0 }];
   
-  const donParSourceData = Array.from(
-    transactionsRevenues.reduce((acc, transaction) => {
-      const category = transaction.type || 'Autres';
-      
-      if (!acc.has(category)) {
-        acc.set(category, 0);
-      }
-      
-      acc.set(category, acc.get(category)! + transaction.montant);
-      return acc;
-    }, new Map<string, number>())
-  ).map(([name, value]) => {
-    const total = transactionsRevenues.reduce((sum, t) => sum + t.montant, 0);
-    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-    return { name, value: percentage };
-  });
+  const donParSourceData = transactionsRevenues.length > 0 ?
+    Array.from(
+      transactionsRevenues.reduce((acc, transaction) => {
+        const category = transaction.type || 'Autres';
+        
+        if (!acc.has(category)) {
+          acc.set(category, 0);
+        }
+        
+        acc.set(category, acc.get(category)! + transaction.montant);
+        return acc;
+      }, new Map<string, number>())
+    ).map(([name, value]) => {
+      const total = transactionsRevenues.reduce((sum, t) => sum + t.montant, 0);
+      const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+      return { name, value: percentage };
+    })
+    :
+    [{ name: 'Pas de données', value: 0 }];
 
   const handleStatCardClick = (type: string) => {
     switch(type) {
