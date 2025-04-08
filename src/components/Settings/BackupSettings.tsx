@@ -1,12 +1,16 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Database, FileText, Check, Download } from 'lucide-react';
+import ResetAppData from './ResetAppData';
+import { useAuth } from '@/contexts/AuthContext';
 
 const BackupSettings = () => {
+  const { userRole } = useAuth();
+  const isAdmin = userRole === 'admin';
+
   return (
     <div className="space-y-6">
       <div>
@@ -116,6 +120,14 @@ const BackupSettings = () => {
             ))}
           </div>
         </div>
+
+        {isAdmin && (
+          <>
+            <Separator className="my-6" />
+            <h3 className="text-lg font-medium text-red-400">Zone de danger</h3>
+            <ResetAppData />
+          </>
+        )}
       </div>
     </div>
   );

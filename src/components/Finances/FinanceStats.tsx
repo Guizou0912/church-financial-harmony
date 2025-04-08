@@ -6,14 +6,24 @@ import { formatMGA } from '@/lib/utils';
 
 interface FinanceStatsProps {
   onStatCardClick: (type: string) => void;
+  revenuTotal?: number;
+  depenseTotal?: number;
+  soldeActuel?: number;
+  croissance?: number;
 }
 
-const FinanceStats: React.FC<FinanceStatsProps> = ({ onStatCardClick }) => {
+const FinanceStats: React.FC<FinanceStatsProps> = ({ 
+  onStatCardClick,
+  revenuTotal = 0,
+  depenseTotal = 0,
+  soldeActuel = 0,
+  croissance = 0
+}) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
         title="Revenus Totaux"
-        value={formatMGA(0)}
+        value={formatMGA(revenuTotal)}
         icon={<DollarSign className="h-5 w-5" />}
         trend={0}
         className="border-l-4 border-l-green-500"
@@ -22,7 +32,7 @@ const FinanceStats: React.FC<FinanceStatsProps> = ({ onStatCardClick }) => {
       />
       <StatCard
         title="Dépenses Totales"
-        value={formatMGA(0)}
+        value={formatMGA(depenseTotal)}
         icon={<ShoppingCart className="h-5 w-5" />}
         trend={0}
         className="border-l-4 border-l-red-500"
@@ -31,7 +41,7 @@ const FinanceStats: React.FC<FinanceStatsProps> = ({ onStatCardClick }) => {
       />
       <StatCard
         title="Solde Actuel"
-        value={formatMGA(0)}
+        value={formatMGA(soldeActuel)}
         icon={<BarChart3 className="h-5 w-5" />}
         trend={0}
         className="border-l-4 border-l-church-cyan"
@@ -40,7 +50,7 @@ const FinanceStats: React.FC<FinanceStatsProps> = ({ onStatCardClick }) => {
       />
       <StatCard
         title="Croissance Annuelle"
-        value="0%"
+        value={`${croissance}%`}
         icon={<TrendingUp className="h-5 w-5" />}
         trend={0}
         className="border-l-4 border-l-church-purple"

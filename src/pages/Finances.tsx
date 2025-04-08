@@ -36,6 +36,12 @@ const Finances = () => {
     loading
   } = useFinancesHandlers();
 
+  // Calculer les totaux
+  const revenuTotal = transactionsRevenues.reduce((sum, t) => sum + t.montant, 0);
+  const depenseTotal = transactionsDepenses.reduce((sum, t) => sum + t.montant, 0);
+  const soldeActuel = revenuTotal - depenseTotal;
+  const croissance = revenuTotal > 0 ? Math.round((soldeActuel / revenuTotal) * 100) : 0;
+
   return (
     <RequireAuth>
       <PageLayout>
@@ -54,12 +60,18 @@ const Finances = () => {
             <FinanceHeader 
               onFilterClick={handleFilterClick}
               onExportClick={handleExport}
-              onAddTransactionClick={() => {}}
+              onAddTransactionClick={handleAddTransaction}
               onApplyFilter={handleApplyFilter}
               onGenerateReport={handleGenerateReport}
             />
 
-            <FinanceStats onStatCardClick={handleStatCardClick} />
+            <FinanceStats 
+              onStatCardClick={handleStatCardClick} 
+              revenuTotal={revenuTotal}
+              depenseTotal={depenseTotal}
+              soldeActuel={soldeActuel}
+              croissance={croissance}
+            />
 
             <FinanceCharts 
               donParSourceData={donParSourceData}
