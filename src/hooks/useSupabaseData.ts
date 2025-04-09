@@ -275,6 +275,108 @@ export const useSupabaseData = () => {
     }
   };
 
+  // Nouvelles fonctions pour la réinitialisation complète
+  const resetAllBudgets = async () => {
+    try {
+      setLoading(true);
+      
+      // D'abord, récupérer tous les budgets
+      const { data: budgets, error: fetchError } = await supabase
+        .from('budgets')
+        .select('id');
+
+      if (fetchError) throw fetchError;
+      
+      // Ensuite, mettre à jour chaque budget avec spent = 0
+      if (budgets && budgets.length > 0) {
+        for (const budget of budgets) {
+          const { error: updateError } = await supabase
+            .from('budgets')
+            .update({ spent: 0 })
+            .eq('id', budget.id);
+          
+          if (updateError) throw updateError;
+        }
+      }
+      
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Erreur lors de la réinitialisation des budgets",
+        description: error.message,
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetAllDepartments = async () => {
+    try {
+      setLoading(true);
+      
+      // D'abord, récupérer tous les départements
+      const { data: departments, error: fetchError } = await supabase
+        .from('departments')
+        .select('id');
+
+      if (fetchError) throw fetchError;
+      
+      // Ensuite, mettre à jour chaque département avec balance = 0
+      if (departments && departments.length > 0) {
+        for (const dept of departments) {
+          const { error: updateError } = await supabase
+            .from('departments')
+            .update({ balance: 0 })
+            .eq('id', dept.id);
+          
+          if (updateError) throw updateError;
+        }
+      }
+      
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Erreur lors de la réinitialisation des départements",
+        description: error.message,
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetEntireApplication = async () => {
+    try {
+      setLoading(true);
+      
+      // Supprimer toutes les transactions
+      const txResult = await deleteAllTransactions();
+      if (!txResult) throw new Error("Échec de la suppression des transactions");
+      
+      // Réinitialiser tous les budgets
+      const budgetResult = await resetAllBudgets();
+      if (!budgetResult) throw new Error("Échec de la réinitialisation des budgets");
+      
+      // Réinitialiser tous les départements
+      const deptResult = await resetAllDepartments();
+      if (!deptResult) throw new Error("Échec de la réinitialisation des départements");
+      
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Erreur lors de la réinitialisation complète",
+        description: error.message,
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     fetchTransactions,
@@ -285,7 +387,10 @@ export const useSupabaseData = () => {
     fetchDepartments,
     addDepartment,
     updateDepartment,
-    deleteAllTransactions
+    deleteAllTransactions,
+    resetAllBudgets,
+    resetAllDepartments,
+    resetEntireApplication
   };
 };
 

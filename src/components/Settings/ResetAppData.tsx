@@ -4,15 +4,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Trash2, AlertTriangle } from "lucide-react";
+import { RefreshCw, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from 'react-router-dom';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 
 const ResetAppData = () => {
   const { toast } = useToast();
   const { userRole, user, signIn } = useAuth();
+  const { resetEntireApplication } = useSupabaseData();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [password, setPassword] = useState("");
@@ -45,7 +46,11 @@ const ResetAppData = () => {
       await signIn(email, password);
       
       // Si nous arrivons ici, l'authentification a réussi
-      await resetAppData();
+      const resetSuccess = await resetEntireApplication();
+      
+      if (!resetSuccess) {
+        throw new Error("Échec de la réinitialisation");
+      }
       
       setIsAuthDialogOpen(false);
       setIsResetDialogOpen(false);
@@ -57,68 +62,25 @@ const ResetAppData = () => {
         description: "Toutes les données de l'application ont été réinitialisées",
       });
 
-      // Forcer un rechargement complet de l'application pour mettre à jour toutes les données
-      // Cette méthode est plus radicale pour s'assurer que tout est réinitialisé
+      // Signaler au navigateur de recharger toutes les données
       localStorage.setItem('appReset', 'true');
+      
+      // Rediriger vers la page d'accueil et forcer un rechargement complet
       setTimeout(() => {
-        window.location.href = '/';  // Redirection complète vers la page d'accueil
+        window.location.href = '/';
         setTimeout(() => {
-          window.location.reload();  // Force le rechargement
+          window.location.reload();
         }, 100);
       }, 500);
+      
     } catch (error: any) {
       toast({
-        title: "Erreur d'authentification",
-        description: "Veuillez vérifier vos identifiants et réessayer",
+        title: "Erreur lors de la réinitialisation",
+        description: error.message || "Veuillez vérifier vos identifiants et réessayer",
         variant: "destructive"
       });
     } finally {
       setIsResetting(false);
-    }
-  };
-
-  const resetAppData = async () => {
-    try {
-      // Supprimer TOUTES les transactions sans filtrer par user_id
-      await supabase
-        .from('transactions')
-        .delete()
-        .not('id', 'is', null); // Supprime toutes les transactions
-      
-      // Récupérer tous les budgets et les remettre à zéro
-      const { data: budgets } = await supabase
-        .from('budgets')
-        .select('id');
-      
-      // Réinitialiser tous les budgets (mettre spent à 0)
-      if (budgets && budgets.length > 0) {
-        for (const budget of budgets) {
-          await supabase
-            .from('budgets')
-            .update({ spent: 0 })
-            .eq('id', budget.id);
-        }
-      }
-      
-      // Récupérer tous les départements et les remettre à zéro
-      const { data: departments } = await supabase
-        .from('departments')
-        .select('id');
-      
-      // Réinitialiser tous les départements (mettre balance à 0)
-      if (departments && departments.length > 0) {
-        for (const department of departments) {
-          await supabase
-            .from('departments')
-            .update({ balance: 0 })
-            .eq('id', department.id);
-        }
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Erreur lors de la réinitialisation:', error);
-      throw error;
     }
   };
 
@@ -135,7 +97,7 @@ const ResetAppData = () => {
             Réinitialiser les données
           </h3>
           <p className="text-sm text-gray-400 mt-1 mb-4">
-            Supprime toutes les transactions et réinitialise les compteurs à zéro. Cette action est irréversible.
+            Supprime toutes les transactions et réinitialise tous les compteurs à zéro. Cette action est irréversible.
           </p>
         </div>
       </div>
@@ -206,6 +168,7 @@ const ResetAppData = () => {
                 type="button"
                 variant="outline"
                 onClick={() => setIsAuthDialogOpen(false)}
+                disabled={isResetting}
               >
                 Annuler
               </Button>
@@ -214,7 +177,12 @@ const ResetAppData = () => {
                 variant="destructive"
                 disabled={isResetting}
               >
-                {isResetting ? "Réinitialisation..." : "Confirmer la réinitialisation"}
+                {isResetting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Réinitialisation en cours...
+                  </>
+                ) : "Confirmer la réinitialisation"}
               </Button>
             </DialogFooter>
           </form>
