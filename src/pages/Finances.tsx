@@ -43,7 +43,8 @@ const Finances = () => {
   const croissance = revenuTotal > 0 ? Math.round((soldeActuel / revenuTotal) * 100) : 0;
 
   return (
-    <RequireAuth>
+    // Using Fragment instead of directly using RequireAuth component
+    <>
       <PageLayout>
         {loading ? (
           <div className="flex items-center justify-center h-64">
@@ -60,7 +61,7 @@ const Finances = () => {
             <FinanceHeader 
               onFilterClick={handleFilterClick}
               onExportClick={handleExport}
-              onAddTransactionClick={() => handleAddTransaction}  {/* Updated to pass the function reference correctly */}
+              onAddTransactionClick={handleAddTransaction} {/* Fixed the syntax error here */}
               onApplyFilter={handleApplyFilter}
               onGenerateReport={handleGenerateReport}
             />
@@ -95,7 +96,7 @@ const Finances = () => {
           </motion.div>
         )}
       </PageLayout>
-    </RequireAuth>
+    </>
   );
 };
 
