@@ -8,6 +8,7 @@ import { RefreshCw, Trash2, AlertTriangle } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useNavigate } from 'react-router-dom';
 
 const ResetAppData = () => {
   const { toast } = useToast();
@@ -17,6 +18,7 @@ const ResetAppData = () => {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [isResetting, setIsResetting] = useState(false);
+  const navigate = useNavigate();
 
   const isAdmin = userRole === 'admin';
 
@@ -54,6 +56,14 @@ const ResetAppData = () => {
         title: "Réinitialisation réussie",
         description: "Toutes les données de l'application ont été réinitialisées",
       });
+
+      // Forcer un rechargement de l'application pour mettre à jour toutes les données
+      setTimeout(() => {
+        navigate('/');
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }, 500);
     } catch (error: any) {
       toast({
         title: "Erreur d'authentification",
