@@ -57,11 +57,13 @@ const ResetAppData = () => {
         description: "Toutes les données de l'application ont été réinitialisées",
       });
 
-      // Forcer un rechargement de l'application pour mettre à jour toutes les données
+      // Forcer un rechargement complet de l'application pour mettre à jour toutes les données
+      // Cette méthode est plus radicale pour s'assurer que tout est réinitialisé
+      localStorage.setItem('appReset', 'true');
       setTimeout(() => {
-        navigate('/');
+        window.location.href = '/';  // Redirection complète vers la page d'accueil
         setTimeout(() => {
-          window.location.reload();
+          window.location.reload(true);  // Force le rechargement sans utiliser le cache
         }, 100);
       }, 500);
     } catch (error: any) {

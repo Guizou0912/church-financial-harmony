@@ -44,11 +44,24 @@ export const useFinancesHandlers = () => {
   const [transactionsDepenses, setTransactionsDepenses] = useState<any[]>([]);
   const [budgetItems, setBudgetItems] = useState<any[]>([]);
   
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  useEffect(() => {
+    const wasReset = localStorage.getItem('appReset');
+    if (wasReset === 'true') {
+      localStorage.removeItem('appReset');
+      setRefreshTrigger(prev => prev + 1);
+      toast({
+        title: "Données réinitialisées",
+        description: "Les données financières ont été réinitialisées avec succès",
+      });
+    }
+  }, []);
+  
   useEffect(() => {
     const loadData = async () => {
       const transactions = await fetchTransactions();
       
-      // Explicitly cast the transaction_type to the correct union type
       const typedTransactions = transactions.map(tx => ({
         ...tx,
         transaction_type: tx.transaction_type as 'income' | 'expense'
@@ -70,8 +83,8 @@ export const useFinancesHandlers = () => {
     };
     
     loadData();
-  }, []);
-
+  }, [refreshTrigger]);
+  
   const revenueData = transactionsRevenues.length > 0 ? 
     Array.from(
       transactionsRevenues.reduce((acc, transaction) => {
@@ -221,6 +234,8 @@ export const useFinancesHandlers = () => {
       } else {
         setTransactionsDepenses(prev => [uiTransaction, ...prev]);
       }
+      
+      setRefreshTrigger(prev => prev + 1);
     }
   };
 
@@ -317,7 +332,6 @@ export const useFinancesHandlers = () => {
         return;
       }
 
-      // Explicitly cast the transaction_type to the correct union type
       const typedData = data.map((t: any) => ({
         ...t,
         transaction_type: t.transaction_type as 'income' | 'expense'
@@ -399,6 +413,8 @@ export const useFinancesHandlers = () => {
       title: "Budget mis à jour",
       description: "Les modifications du budget ont été enregistrées avec succès.",
     });
+    
+    setRefreshTrigger(prev => prev + 1);
   };
 
   return {
@@ -422,7 +438,8 @@ export const useFinancesHandlers = () => {
     donParSourceData,
     depenseParCategorieData,
     budgetItems,
-    loading
+    loading,
+    refreshData: () => setRefreshTrigger(prev => prev + 1)
   };
 };
 
