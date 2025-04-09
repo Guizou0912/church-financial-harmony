@@ -26,7 +26,7 @@ import {
 interface FinanceHeaderProps {
   onFilterClick: () => void;
   onExportClick: () => void;
-  onAddTransactionClick: () => void;
+  onAddTransactionClick: (newTransaction?: any) => void;  // Updated to accept an optional parameter
   onApplyFilter?: (filters: TransactionFilters) => void;
   onGenerateReport?: (options: ReportOptions) => void;
 }

@@ -60,7 +60,7 @@ const Finances = () => {
             <FinanceHeader 
               onFilterClick={handleFilterClick}
               onExportClick={handleExport}
-              onAddTransactionClick={handleAddTransaction}
+              onAddTransactionClick={() => handleAddTransaction}  {/* Updated to pass the function reference correctly */}
               onApplyFilter={handleApplyFilter}
               onGenerateReport={handleGenerateReport}
             />
