@@ -51,7 +51,7 @@ export const useSupabaseData = () => {
         .order('transaction_date', { ascending: false });
 
       if (error) throw error;
-      return data as Transaction[];
+      return data as Transaction[] || [];
     } catch (error: any) {
       toast({
         title: "Erreur lors du chargement des transactions",
@@ -101,7 +101,7 @@ export const useSupabaseData = () => {
         .select('*');
 
       if (error) throw error;
-      return data as Budget[];
+      return data as Budget[] || [];
     } catch (error: any) {
       toast({
         title: "Erreur lors du chargement des budgets",
@@ -151,7 +151,7 @@ export const useSupabaseData = () => {
         .select('*');
 
       if (error) throw error;
-      return data as Department[];
+      return data as Department[] || [];
     } catch (error: any) {
       toast({
         title: "Erreur lors du chargement des départements",
@@ -251,6 +251,30 @@ export const useSupabaseData = () => {
     }
   };
 
+  // Nouvelle fonction pour effacer toutes les transactions
+  const deleteAllTransactions = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .not('id', 'is', null);  // Supprime toutes les transactions
+
+      if (error) throw error;
+      
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Erreur lors de la suppression des transactions",
+        description: error.message,
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     fetchTransactions,
@@ -260,7 +284,8 @@ export const useSupabaseData = () => {
     updateBudget,
     fetchDepartments,
     addDepartment,
-    updateDepartment
+    updateDepartment,
+    deleteAllTransactions
   };
 };
 

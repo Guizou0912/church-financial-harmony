@@ -63,7 +63,7 @@ const ResetAppData = () => {
       setTimeout(() => {
         window.location.href = '/';  // Redirection complète vers la page d'accueil
         setTimeout(() => {
-          window.location.reload(true);  // Force le rechargement sans utiliser le cache
+          window.location.reload();  // Force le rechargement
         }, 100);
       }, 500);
     } catch (error: any) {
@@ -79,34 +79,40 @@ const ResetAppData = () => {
 
   const resetAppData = async () => {
     try {
-      // Supprimer toutes les transactions
+      // Supprimer TOUTES les transactions sans filtrer par user_id
       await supabase
         .from('transactions')
         .delete()
-        .eq('user_id', user?.id);
+        .not('id', 'is', null); // Supprime toutes les transactions
       
-      // Réinitialiser tous les budgets (on ne les supprime pas pour conserver la structure)
+      // Récupérer tous les budgets et les remettre à zéro
       const { data: budgets } = await supabase
         .from('budgets')
         .select('id');
       
-      for (const budget of budgets || []) {
-        await supabase
-          .from('budgets')
-          .update({ spent: 0 })
-          .eq('id', budget.id);
+      // Réinitialiser tous les budgets (mettre spent à 0)
+      if (budgets && budgets.length > 0) {
+        for (const budget of budgets) {
+          await supabase
+            .from('budgets')
+            .update({ spent: 0 })
+            .eq('id', budget.id);
+        }
       }
       
-      // Réinitialiser les départements
+      // Récupérer tous les départements et les remettre à zéro
       const { data: departments } = await supabase
         .from('departments')
         .select('id');
       
-      for (const department of departments || []) {
-        await supabase
-          .from('departments')
-          .update({ balance: 0 })
-          .eq('id', department.id);
+      // Réinitialiser tous les départements (mettre balance à 0)
+      if (departments && departments.length > 0) {
+        for (const department of departments) {
+          await supabase
+            .from('departments')
+            .update({ balance: 0 })
+            .eq('id', department.id);
+        }
       }
       
       return true;

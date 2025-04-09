@@ -62,21 +62,26 @@ export const useFinancesHandlers = () => {
     const loadData = async () => {
       const transactions = await fetchTransactions();
       
-      const typedTransactions = transactions.map(tx => ({
-        ...tx,
-        transaction_type: tx.transaction_type as 'income' | 'expense'
-      }));
-      
-      const revenus = typedTransactions
-        .filter(t => t.transaction_type === 'income')
-        .map(mapTransactionToUi);
+      if (!transactions || transactions.length === 0) {
+        setTransactionsRevenues([]);
+        setTransactionsDepenses([]);
+      } else {
+        const typedTransactions = transactions.map(tx => ({
+          ...tx,
+          transaction_type: tx.transaction_type as 'income' | 'expense'
+        }));
         
-      const depenses = typedTransactions
-        .filter(t => t.transaction_type === 'expense')
-        .map(mapTransactionToUi);
-      
-      setTransactionsRevenues(revenus);
-      setTransactionsDepenses(depenses);
+        const revenus = typedTransactions
+          .filter(t => t.transaction_type === 'income')
+          .map(mapTransactionToUi);
+          
+        const depenses = typedTransactions
+          .filter(t => t.transaction_type === 'expense')
+          .map(mapTransactionToUi);
+        
+        setTransactionsRevenues(revenus);
+        setTransactionsDepenses(depenses);
+      }
       
       const budgets = await fetchBudgets();
       setBudgetItems(budgets.map(mapBudgetToUi));
@@ -417,6 +422,10 @@ export const useFinancesHandlers = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  const forceRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return {
     activeTab,
     setActiveTab,
@@ -439,7 +448,7 @@ export const useFinancesHandlers = () => {
     depenseParCategorieData,
     budgetItems,
     loading,
-    refreshData: () => setRefreshTrigger(prev => prev + 1)
+    refreshData: forceRefresh
   };
 };
 
