@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -251,19 +250,27 @@ export const useSupabaseData = () => {
     }
   };
 
-  // Nouvelle fonction pour effacer toutes les transactions
+  // Fonction pour effacer TOUTES les transactions
   const deleteAllTransactions = async () => {
     try {
       setLoading(true);
+      console.log("Suppression de toutes les transactions...");
+      
+      // Supprimer TOUTES les transactions sans exception
       const { error } = await supabase
         .from('transactions')
         .delete()
-        .not('id', 'is', null);  // Supprime toutes les transactions
-
-      if (error) throw error;
+        .neq('id', '');  // Cette condition est toujours vraie, donc supprime tout
       
+      if (error) {
+        console.error("Erreur lors de la suppression des transactions:", error);
+        throw error;
+      }
+      
+      console.log("Toutes les transactions ont été supprimées avec succès");
       return true;
     } catch (error: any) {
+      console.error("Erreur complète lors de la suppression des transactions:", error);
       toast({
         title: "Erreur lors de la suppression des transactions",
         description: error.message,
@@ -275,32 +282,44 @@ export const useSupabaseData = () => {
     }
   };
 
-  // Nouvelles fonctions pour la réinitialisation complète
+  // Réinitialiser tous les budgets à zéro
   const resetAllBudgets = async () => {
     try {
       setLoading(true);
+      console.log("Réinitialisation de tous les budgets...");
       
       // D'abord, récupérer tous les budgets
       const { data: budgets, error: fetchError } = await supabase
         .from('budgets')
         .select('id');
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error("Erreur lors de la récupération des budgets:", fetchError);
+        throw fetchError;
+      }
       
       // Ensuite, mettre à jour chaque budget avec spent = 0
       if (budgets && budgets.length > 0) {
-        for (const budget of budgets) {
-          const { error: updateError } = await supabase
-            .from('budgets')
-            .update({ spent: 0 })
-            .eq('id', budget.id);
+        console.log(`${budgets.length} budgets trouvés, réinitialisation en cours...`);
+        
+        const { error: updateError } = await supabase
+          .from('budgets')
+          .update({ spent: 0 })
+          .is('id', 'not', null);  // Mettre à jour TOUS les budgets
           
-          if (updateError) throw updateError;
+        if (updateError) {
+          console.error("Erreur lors de la mise à jour des budgets:", updateError);
+          throw updateError;
         }
+        
+        console.log("Tous les budgets ont été réinitialisés avec succès");
+      } else {
+        console.log("Aucun budget trouvé à réinitialiser");
       }
       
       return true;
     } catch (error: any) {
+      console.error("Erreur complète lors de la réinitialisation des budgets:", error);
       toast({
         title: "Erreur lors de la réinitialisation des budgets",
         description: error.message,
@@ -312,31 +331,27 @@ export const useSupabaseData = () => {
     }
   };
 
+  // Réinitialiser tous les départements à zéro
   const resetAllDepartments = async () => {
     try {
       setLoading(true);
+      console.log("Réinitialisation de tous les départements...");
       
-      // D'abord, récupérer tous les départements
-      const { data: departments, error: fetchError } = await supabase
+      // Mise à jour de tous les départements avec balance = 0
+      const { error: updateError } = await supabase
         .from('departments')
-        .select('id');
-
-      if (fetchError) throw fetchError;
+        .update({ balance: 0 })
+        .is('id', 'not', null);  // Mettre à jour TOUS les départements
       
-      // Ensuite, mettre à jour chaque département avec balance = 0
-      if (departments && departments.length > 0) {
-        for (const dept of departments) {
-          const { error: updateError } = await supabase
-            .from('departments')
-            .update({ balance: 0 })
-            .eq('id', dept.id);
-          
-          if (updateError) throw updateError;
-        }
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour des départements:", updateError);
+        throw updateError;
       }
       
+      console.log("Tous les départements ont été réinitialisés avec succès");
       return true;
     } catch (error: any) {
+      console.error("Erreur complète lors de la réinitialisation des départements:", error);
       toast({
         title: "Erreur lors de la réinitialisation des départements",
         description: error.message,
@@ -348,24 +363,40 @@ export const useSupabaseData = () => {
     }
   };
 
+  // Fonction principale de réinitialisation complète
   const resetEntireApplication = async () => {
     try {
       setLoading(true);
+      console.log("Début de la réinitialisation complète de l'application...");
       
-      // Supprimer toutes les transactions
+      // 1. Supprimer toutes les transactions
+      console.log("Étape 1: Suppression des transactions");
       const txResult = await deleteAllTransactions();
-      if (!txResult) throw new Error("Échec de la suppression des transactions");
+      if (!txResult) {
+        console.error("Échec de l'étape 1: Suppression des transactions");
+        throw new Error("Échec de la suppression des transactions");
+      }
       
-      // Réinitialiser tous les budgets
+      // 2. Réinitialiser tous les budgets
+      console.log("Étape 2: Réinitialisation des budgets");
       const budgetResult = await resetAllBudgets();
-      if (!budgetResult) throw new Error("Échec de la réinitialisation des budgets");
+      if (!budgetResult) {
+        console.error("Échec de l'étape 2: Réinitialisation des budgets");
+        throw new Error("Échec de la réinitialisation des budgets");
+      }
       
-      // Réinitialiser tous les départements
+      // 3. Réinitialiser tous les départements
+      console.log("Étape 3: Réinitialisation des départements");
       const deptResult = await resetAllDepartments();
-      if (!deptResult) throw new Error("Échec de la réinitialisation des départements");
+      if (!deptResult) {
+        console.error("Échec de l'étape 3: Réinitialisation des départements");
+        throw new Error("Échec de la réinitialisation des départements");
+      }
       
+      console.log("Réinitialisation complète terminée avec succès!");
       return true;
     } catch (error: any) {
+      console.error("Erreur pendant la réinitialisation complète:", error);
       toast({
         title: "Erreur lors de la réinitialisation complète",
         description: error.message,

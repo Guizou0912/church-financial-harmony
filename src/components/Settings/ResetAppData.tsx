@@ -45,12 +45,17 @@ const ResetAppData = () => {
       // Vérifier les identifiants de l'administrateur
       await signIn(email, password);
       
+      console.log("Authentification réussie, début de la réinitialisation...");
+      
       // Si nous arrivons ici, l'authentification a réussi
       const resetSuccess = await resetEntireApplication();
       
       if (!resetSuccess) {
+        console.error("Échec de la réinitialisation des données");
         throw new Error("Échec de la réinitialisation");
       }
+      
+      console.log("Réinitialisation des données terminée avec succès");
       
       setIsAuthDialogOpen(false);
       setIsResetDialogOpen(false);
@@ -65,15 +70,18 @@ const ResetAppData = () => {
       // Signaler au navigateur de recharger toutes les données
       localStorage.setItem('appReset', 'true');
       
-      // Rediriger vers la page d'accueil et forcer un rechargement complet
+      // Force un rechargement complet de l'application pour être sûr que toutes les données sont rafraîchies
+      console.log("Rechargement complet de l'application...");
       setTimeout(() => {
         window.location.href = '/';
         setTimeout(() => {
-          window.location.reload();
+          console.log("Forçage du rechargement de la page...");
+          window.location.reload(true); // Force reload from server, not from cache
         }, 100);
       }, 500);
       
     } catch (error: any) {
+      console.error("Erreur lors de la réinitialisation:", error);
       toast({
         title: "Erreur lors de la réinitialisation",
         description: error.message || "Veuillez vérifier vos identifiants et réessayer",
