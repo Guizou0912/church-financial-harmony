@@ -43,60 +43,57 @@ const Finances = () => {
   const croissance = revenuTotal > 0 ? Math.round((soldeActuel / revenuTotal) * 100) : 0;
 
   return (
-    // Using Fragment instead of directly using RequireAuth component
-    <>
-      <PageLayout>
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-6 h-6 animate-spin" />
-            <span className="ml-2">Chargement des données financières...</span>
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-6"
-          >
-            <FinanceHeader 
-              onFilterClick={handleFilterClick}
-              onExportClick={handleExport}
-              onAddTransactionClick={handleAddTransaction} {/* Fixed the syntax error here */}
-              onApplyFilter={handleApplyFilter}
-              onGenerateReport={handleGenerateReport}
-            />
+    <PageLayout>
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span className="ml-2">Chargement des données financières...</span>
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-6"
+        >
+          <FinanceHeader 
+            onFilterClick={handleFilterClick}
+            onExportClick={handleExport}
+            onAddTransactionClick={handleAddTransaction}
+            onApplyFilter={handleApplyFilter}
+            onGenerateReport={handleGenerateReport}
+          />
 
-            <FinanceStats 
-              onStatCardClick={handleStatCardClick} 
-              revenuTotal={revenuTotal}
-              depenseTotal={depenseTotal}
-              soldeActuel={soldeActuel}
-              croissance={croissance}
-            />
+          <FinanceStats 
+            onStatCardClick={handleStatCardClick} 
+            revenuTotal={revenuTotal}
+            depenseTotal={depenseTotal}
+            soldeActuel={soldeActuel}
+            croissance={croissance}
+          />
 
-            <FinanceCharts 
-              donParSourceData={donParSourceData}
-              depenseParCategorieData={depenseParCategorieData}
-              onChartClick={handleChartClick}
-            />
+          <FinanceCharts 
+            donParSourceData={donParSourceData}
+            depenseParCategorieData={depenseParCategorieData}
+            onChartClick={handleChartClick}
+          />
 
-            <FinanceMainContent 
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              handleBudgetItemClick={handleBudgetItemClick}
-              handleQuickActionClick={handleQuickActionClick}
-              handleTransactionClick={handleTransactionClick}
-              handleChartClick={handleChartClick}
-              revenueData={revenueData}
-              depenseData={depenseData}
-              transactionsRevenues={transactionsRevenues}
-              transactionsDepenses={transactionsDepenses}
-              budgetItems={budgetItems}
-            />
-          </motion.div>
-        )}
-      </PageLayout>
-    </>
+          <FinanceMainContent 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            handleBudgetItemClick={handleBudgetItemClick}
+            handleQuickActionClick={handleQuickActionClick}
+            handleTransactionClick={handleTransactionClick}
+            handleChartClick={handleChartClick}
+            revenueData={revenueData}
+            depenseData={depenseData}
+            transactionsRevenues={transactionsRevenues}
+            transactionsDepenses={transactionsDepenses}
+            budgetItems={budgetItems}
+          />
+        </motion.div>
+      )}
+    </PageLayout>
   );
 };
 
